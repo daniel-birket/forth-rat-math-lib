@@ -1,0 +1,45 @@
+#+TITLE: Rational Math Library for Forth
+#+SUBTITLE: Read-me Introduction
+#+AUTHOR: Daniel Birket
+#+EMAIL: danielb@birket.com
+
+This repository provides a library to do basic arithmetic with highly
+precise rational numbers and to convert between rational numbers and
+the usual number types supported by Forth.
+
+Rational numbers are expressed as fractions with a single-precision
+signed integer numerator and single-precision signed integer
+denominator.
+
+Rational numbers are able to exactly express many “floating point”
+decimal numbers that cannot be expressed exactly as fixed or floating
+point numbers. For example, 0.1 can only be approximately expressed as
+a floating or fixed point number but can be exactly expressed as a
+rational number: 1/10.
+
+This library supports 2-cell rational numbers consisting of a
+single-precision signed numerator and a single-precision unsigned
+denominator.
+
+The largest number that can be expressed is the same as a
+single-precision signed integer (2,147,483,647 with a 32-bit cell),
+with 1 in the denominator. The smallest fraction that can be expressed
+is the inverse of the largest single-precision signed integer
+(1/2147483647), with 1 (or -1) in the numerator and the maximum
+integer in the denominator.
+
+There is an inherent trade-off between precision and range. Precision
+and range vary inversely to each other depending on the size of the
+denominator. If the denominator is at the minimum, 1, the range is the
+entire double-precision integer range (-2,147,483,648 to
+2,147,483,647) but there is only integer precision. If the denominator
+is 1000, there is 0.001 precision, but 1/1000 of the double-precision
+integer range (-2,147,483 to 2.147,483). When the denominator is at
+its maximum, precision is very high and the range is reduced to -1
+to 1.
+
+I realize that the limited range may be a concern for some uses, but
+no more than the numerical limitations of other types. I have good
+intentions of creating a double-precision rational number library, but
+as this is my first significant project in Forth, I will do the easier
+single-precision case for now.
