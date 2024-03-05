@@ -313,34 +313,97 @@ Tests:
 Note that conversion of negative zero doesn’t work, but that value is
 so esoteric that it doesn’t merit making the word more complex.
 
-- f>rat ::
+- CTZ “Count Trailing Zeros” ::
+  Count trailing zeros. (see [[https://en.wikipedia.org/wiki/Find_first_set][Find First Set]]). Given a 32-bit positive
+  signed integer (0 sign bit), count the number of trailing zero bits.
+
+  |                            given | returns |
+  |----------------------------------+---------|
+  | 0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1 |       0 |
+  | 0xxxxxxxxxxxxxxxxxxxxxxxxxxxxx10 |       1 |
+  | 0xxxxxxxxxxxxxxxxxxxxxxxxxxxx100 |       2 |
+  | 0x100000000000000000000000000000 |      29 |
+  | 01000000000000000000000000000000 |      30 |
+  | 10000000000000000000000000000000 |      31 |
+  | 00000000000000000000000000000000 |      32 |
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    : CTZ ( n -- tz )
+      dup negate and  \ isolate trailing 1-bit
+      32 swap  \ initialize count to 32
+      dup if swap 1- swap then
+      dup $0000FFFF and if swap 16 - swap then
+      dup $00FF00FF and if swap 8 - swap then
+      dup $0F0F0F0F and if swap 4 - swap then
+      dup $33333333 and if swap 2 - swap then
+      dup $55555555 and if swap 1- swap then
+      drop ;  \ drop the input
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+    0 CTZ .s drop  \ <1> 32 =
+    $80000000 CTZ .s drop  \ <1> 31 =
+    $40000000 CTZ .s drop  \ <1> 30 =
+    $60000000 CTZ .s drop  \ <1> 29 =
+    $70000000 CTZ .s drop  \ <1> 28 =
+    1 CTZ .s drop  \ <1> 0 =
+    2 CTZ .s drop  \ <1> 1 =
+    12 CTZ .s drop  \ <1> 2 =
+  #+end_src
+
+- e8f23>rat ::
+  Convert a normal float 8-bit exponent and 23-bit fraction to a
+  rational number. If out of rational range, return NaN (0/0).
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    : ex8f23>rat { ex8 f23 -- n-N n-D }
+		\ Convert a normal IEEE float exponent and fraction to rational.
+		\ ex8: 8 bit unsigned 0-255 IEEE float exponent, right justified
+		\ fr23 : 23-bit unsigned float fraction (sans implied 1 in bit 24)
+		\ Does not handle +/- infinity or NaN.
+		\ Returns rational NaN (0/0) if out of rational range.
+		f23 $00800000 or cr ." N24: " ['] .s 16 base-execute ( -- N24 )  \ attach the silent 1 at bit 24
+		dup CTZ cr ." N24 tz: " ['] .s 16 base-execute ( -- N24 tz )  \ trailing zeros is 0 to 23
+		$00800000 swap cr ." N24 D24 tz: " ['] .s 16 base-execute ( -- N24 D24 tz )
+		drop 2drop
+		;
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+  #+end_src
+
+- f>rat “Float to Rational” ::
   Convert a floating point number to a rational number.
 
   #+begin_src forth :tangle rat-math-lib.fs
     variable f32ieee  \ Entire 32-bit ieee float buffer
-    variable f32frac  \ 23-bit fraction part of float, with bit 24 set
-    variable f32expo  \ exponent of float, shifted down 23 bits.
-    variable f32sign  \ negative sign of float
 
     : f>rat ( f -- n-N n-D)
       \ Convert a floating point number to a rational number.
       f32ieee sf!  \ store the given float as 32 bits
-      f32ieee @ $007FFFFF and f32frac !  \ get and store the fraction
-      f32ieee @ $7F800000 and 23 rshift f32expo !  \ get and store the exponent
-      f32ieee @ $80000000 and f32sign !  \ get and store the sign
+      f32ieee @ $007FFFFF and  \ 23-bit fraction part of float, with bit 24 set
+      f32ieee @ $7F800000 and 23 rshift  \ exponent of float, shifted down 23 bits.
+      f32ieee @ $80000000 and  \ negative sign of float
+      { f32frac f32expo f32sign }
 
       \ debug dumps
-      f32sign @ if ." -" else ." +" then
-      ." $1." f32frac @ hex . decimal
-      ." * 2^(" f32expo @ . ." -127) "
+      ." | "
+      f32sign if ." -" else ." +" then
+      ." $1." f32frac hex . decimal
+      ." * 2^(" f32expo . ." -127) "
+      ." | "
 
-      f32expo @ $FF =
+      f32expo $FF =
       if  \ expo = special 255 ?
-	f32frac @
+	f32frac
 	if  \ frac <> 0 ?
 	  ratNan  \ non-a-number
 	else  \ +/- inf
-	  f32sign @
+	  f32sign
 	  if  \ negative ?
 	    ratNegInf
 	  else
@@ -348,17 +411,16 @@ so esoteric that it doesn’t merit making the word more complex.
 	  then
 	then
       else
-	f32expo @ 0= f32frac @ 0= and
+	f32expo 0= f32frac 0= and
 	if  \ expo = 0 and frac = 0
-	  f32sign @
+	  f32sign
 	  if  \ negative ?
 	    ratNegZero
 	  else
 	    ratZero
 	  then
 	else
-	  ratZero
-	  ." normal "
+	  f32expo f32frac ex8f23>rat  \ Convert normal exponent and fraction to rational
 	then
       then ;
   #+end_src
@@ -379,23 +441,23 @@ so esoteric that it doesn’t merit making the word more complex.
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
     .s ." F: " f.s  \ <0> F: <0> =
-    0.0e0 f.s f>rat .s 2drop  \ <2> 0 1 =
-    -0.0e0 f.s f>rat .s 2drop  \ <2> 0 -1 =
-    1.0e0 0.0e0 f/ f.s f>rat .s 2drop  \ <2> 1 0 =
-    -1.0e0 0.0e0 f/ f.s f>rat .s 2drop  \ <2> -1 0 =
-    0.0e0 0.0e0 f/ f.s f>rat .s 2drop  \ <2> 0 0 =
-    1.0e0 f.s f>rat .s 2drop  \ <2> 1 1 =
-    -1.0e0 f.s f>rat .s 2drop  \ <2> -1 1 =
+    0.0e0 f.s ." -- " f>rat .s 2drop  \ <1> 0e0 -- <2> 0 1 =
+    -0.0e0 f.s ." -- " f>rat .s 2drop  \ <1> 0e0 -- <2> 0 -1 =
+    1.0e0 0.0e0 f/ f.s ." -- " f>rat .s 2drop  \ <1> inf -- <2> 1 0 =
+    -1.0e0 0.0e0 f/ f.s ." -- " f>rat .s 2drop  \ <1> -inf -- <2> -1 0 =
+    0.0e0 0.0e0 f/ f.s ." -- " f>rat .s 2drop  \ <1> nan -- <2> 0 0 =
+    1.0e0 f.s ." -- " f>rat .s 2drop  \ <1> 1e0 -- <2> 1 1 =
+    -1.0e0 f.s ." -- " f>rat .s 2drop  \ <1> -1e0 -- <2> -1 1 =
   #+end_src
 
 ** Helpers
 
 - GCF “Greatest Common Factor” ::
-  Find the positive greatest common factor of two signed integers.
+  Find the positive greatest common factor of two signed non-zero integers.
 
   #+begin_src forth :tangle rat-math-lib.fs
     : GCF ( n1 n2 -- n-gcf )
-      \ finds positive greatest common factor of n1, n2
+      \ Find positive greatest common factor of signed non-0 ints n1, n2
       begin
 	?dup
       while
@@ -406,19 +468,58 @@ so esoteric that it doesn’t merit making the word more complex.
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+    0 0 GCF .s drop  \ input error <1> 0 =
+    1 0 GCF .s drop  \ exit case <1> 1 =
+    0 1 GCF .s drop  \ rev exit <1> 1 =
+    2 1 GCF .s drop  \ n1 > n2 <1> 1 =
+    1 2 GCF .s drop  \ n1 < n2 <1> 1 =
+    1 1 GCF .s drop  \ <1> 1 =
+    -1 1 GCF .s drop  \ <1> 1 =
+    1 -1 GCF .s drop  \ <1> 1 =
+    -1 -1 GCF .s drop  \ <1> 1 =
+    2 2 GCF .s drop  \ n1 = n2 <1> 2 =
+    -2 2 GCF .s drop  \ -n1 = n2 <1> 2 =
+    2 -2 GCF .s drop  \ n1 = -n2 <1> 2 =
+    2 4 GCF .s drop  \ <1> 2 =
+    4 2 GCF .s drop  \ <1> 2 =
+    -2 4 GCF .s drop  \ <1> 2 =
+    4 -2 GCF .s drop  \ <1> 2 =
+    2 -4 GCF .s drop  \ <1> 2 =
+    -4 2 GCF .s drop  \ <1> 2 =
+    65536 256 GCF .s drop  \ <1> 256 =
+    65537 257 GCF .s drop  \ <1> 1 =
+    2147483645 6289 GCF .s drop  \ <1> 19 =
   #+end_src
 
 - LCM “Least Common Multiple” ::
-  Find the positive least common multiple of two signed integers.
+  Find the positive least common multiple of two signed non-zero
+  integers. If either input is zero, making GCF 0, return 0.
 
   #+begin_src forth :tangle rat-math-lib.fs
     : LCM ( n1 n2 -- n-lcm )
-      \ Find the positive least common multiple of two signed integers.
-      2dup GCF */ ;
+      \ Find the positive least common multiple of two signed non-zero integers.
+      2dup GCF
+      dup
+      if  \ if GCF <> 0
+	,*/ abs
+      else
+	drop 2drop 0  \ error: cleanup, return 0
+      then ;
   #+end_src
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+    0 0 LCM .s drop  \ input error <1> 0 =
+    1 0 LCM .s drop  \ GCD exit case <1> 0 =
+    0 1 LCM .s drop  \ GCD rev exit case <1> 0 =
+    2 1 LCM .s drop  \ <1> 2 =
+    1 2 LCM .s drop  \ <1> 2 =
+    1 1 LCM .s drop  \ <1> 1 =
+    1 -1 LCM .s drop  \ <1> 1 =
+    -1 1 LCM .s drop  \ <1> 1 =
+    65537 257 LCM .s drop \ <1> 16843009 =
   #+end_src
 
 - ratFixSign “rat fix sign” ::
@@ -437,8 +538,35 @@ so esoteric that it doesn’t merit making the word more complex.
       then ;
   #+end_src
 
+  Works for:
+  - [ ] +0
+  - [ ] -0
+  - [ ] +Inf
+  - [ ] -Inf
+  - [ ] NaN
+  - [ ] +1
+  - [ ] -1
+  - [ ] +2147483647
+  - [ ] -2147483648
+  - [ ] +1/2147483647
+  - [ ] -1/2147483647
+
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+    0 1 ratFixSign .s 2drop  \ 0  <2> 0 1 =
+    0 -1 ratFixSign .s 2drop  \ -1 <2> 0 -1 =
+    1 0 ratFixSign .s 2drop  \ inf <2> 1 0 =
+    -1 0 ratFixSign .s 2drop  \ -inf <2> -1 0 =
+    0 0 ratFixSign .s 2drop  \ nan <2> 0 0 =
+    1 1 ratFixSign .s 2drop  \ nan <2> 1 1 =
+    -1 1 ratFixSign .s 2drop  \ nan <2> -1 1 =
+    -1 -1 ratFixSign .s 2drop  \ nan <2> 1 1 =
+    1 -1 ratFixSign .s 2drop  \ nan <2> -1 1 =
+    2 3 ratFixSign .s 2drop  \ nan <2> 2 3 =
+    -2 3 ratFixSign .s 2drop  \ nan <2> -2 3 =
+    -2 -3 ratFixSign .s 2drop  \ nan <2> 2 3 =
+    2 -3 ratFixSign .s 2drop  \ nan <2> -2 3 =
   #+end_src
 
 - ratReduce “rat reduce” ::
@@ -447,7 +575,7 @@ so esoteric that it doesn’t merit making the word more complex.
   factor, if the GCF is greater than one.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : ratReduce ( n-Num n-Den -- n-Num n-Den )
+    : ratReduce ( n-N n-D -- n-N1 n-D1 )
       \ if both terms are non-zero and the GCF is > 1, reduce to lowest terms.
       dup  \ numer <> 0 ?
       if
@@ -455,10 +583,10 @@ so esoteric that it doesn’t merit making the word more complex.
 	if
 	  2dup GCF  \ find GCF (which is positive)
 	  dup 1-  \ GCF > 1 ?
-	  if ( n-Num n-Den GCF )
-	    dup -rot ( n-Num GCF n-Den GCF )
-	    2swap / -rot  \ numer=numer/GCF
-	    /  \ denom=denom/GCF
+	  if ( -- n-N n-D GCF )
+	    dup -rot ( -- n-N GCF n-D GCF )
+	    2swap / -rot  \ numer=numer/GCF ( -- n-N1 n-D GCF )
+	    /  \ denom=denom/GCF ( -- n-N1 n-D1 )
 	  else
 	    drop  \ drop GCF of 1
 	  then
@@ -468,6 +596,7 @@ so esoteric that it doesn’t merit making the word more complex.
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
   #+end_src
 
 - ratNormal “rat normalize” ::
@@ -477,6 +606,7 @@ so esoteric that it doesn’t merit making the word more complex.
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
   #+end_src
 
 ** Operations
@@ -486,9 +616,19 @@ so esoteric that it doesn’t merit making the word more complex.
   #+begin_src forth :tangle rat-math-lib.fs
   #+end_src
 
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+  #+end_src
+
 - rat1+ “rat one plus” :: 
 
   #+begin_src forth :tangle rat-math-lib.fs
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
   #+end_src
 
 - rat- “rat minus” ::
@@ -496,9 +636,19 @@ so esoteric that it doesn’t merit making the word more complex.
   #+begin_src forth :tangle rat-math-lib.fs
   #+end_src
 
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+  #+end_src
+
 - rat1- “rat 1 minus” :: 
 
   #+begin_src forth :tangle rat-math-lib.fs
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
   #+end_src
 
 - rat* “rat star” ::
@@ -506,9 +656,19 @@ so esoteric that it doesn’t merit making the word more complex.
   #+begin_src forth :tangle rat-math-lib.fs
   #+end_src
 
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+  #+end_src
+
 - rat/ “rat slash” ::
 
   #+begin_src forth :tangle rat-math-lib.fs
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
   #+end_src
 
 - ratNegate “rat negate” ::
@@ -516,9 +676,19 @@ so esoteric that it doesn’t merit making the word more complex.
   #+begin_src forth :tangle rat-math-lib.fs
   #+end_src
 
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+  #+end_src
+
 - ratAbs “rat abs” ::
 
   #+begin_src forth :tangle rat-math-lib.fs
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
   #+end_src
 
 - ratMin “rat min” ::
@@ -526,9 +696,19 @@ so esoteric that it doesn’t merit making the word more complex.
   #+begin_src forth :tangle rat-math-lib.fs
   #+end_src
 
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+  #+end_src
+
 - ratMax “rat max” :: 
 
   #+begin_src forth :tangle rat-math-lib.fs
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
   #+end_src
 
 ** Comparisons
