@@ -44,8 +44,8 @@ The file rat-math-lib.fs contains the rational math library:
 
 #+begin_src forth :tangle rat-math-lib.fs
   \ Notation:
-  \ n-N : single-precision signed integer numerator
-  \ n-D : single-precision signed integer denominator
+  \ num : single-precision signed integer numerator
+  \ den : single-precision signed integer denominator
   \ "name" : name from input stream (not stack)
   \ a-addr : address, perhaps from a variable
 #+end_src
@@ -54,6 +54,11 @@ The file rat-math-lib-tests.fs contains the test suite for the library:
 
 #+begin_src forth :tangle rat-math-lib-tests.fs
   \ Test Suite for rat-math-lib.fs
+  : confirm if ." Pass " else ." Fail " bye then ;  \ immediate assert( )
+
+  : 2= ( n1 n2 n3 n4 -- f ) \ rat-test "two-equals"
+       \ first two singles equal second two singles ( n1 = n3 AND n2 = n4 )
+       swap -rot = -rot = and ;
 #+end_src
 
 * Words
@@ -69,8 +74,8 @@ These generally useful functions are used by some “rat” functions below.
   Find the positive greatest common factor of two signed non-zero integers.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : GCF ( n1 n2 -- n-gcf )
-      \ Find positive greatest common factor of signed non-0 ints n1, n2
+    : GCF ( n1 n2 -- n ) \ rational "Greatest Common Factor"
+      \ Return the positive signed integer greatest common factor of 2 signed non-0 ints
       begin
 	?dup
       while
@@ -82,27 +87,27 @@ These generally useful functions are used by some “rat” functions below.
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
     .s  \ <0> =
-    0 0 GCF .s drop  \ input error <1> 0 =
-    1 0 GCF .s drop  \ exit case <1> 1 =
-    0 1 GCF .s drop  \ rev exit <1> 1 =
-    2 1 GCF .s drop  \ n1 > n2 <1> 1 =
-    1 2 GCF .s drop  \ n1 < n2 <1> 1 =
-    1 1 GCF .s drop  \ <1> 1 =
-    -1 1 GCF .s drop  \ <1> 1 =
-    1 -1 GCF .s drop  \ <1> 1 =
-    -1 -1 GCF .s drop  \ <1> 1 =
-    2 2 GCF .s drop  \ n1 = n2 <1> 2 =
-    -2 2 GCF .s drop  \ -n1 = n2 <1> 2 =
-    2 -2 GCF .s drop  \ n1 = -n2 <1> 2 =
-    2 4 GCF .s drop  \ <1> 2 =
-    4 2 GCF .s drop  \ <1> 2 =
-    -2 4 GCF .s drop  \ <1> 2 =
-    4 -2 GCF .s drop  \ <1> 2 =
-    2 -4 GCF .s drop  \ <1> 2 =
-    -4 2 GCF .s drop  \ <1> 2 =
-    65536 256 GCF .s drop  \ <1> 256 =
-    65537 257 GCF .s drop  \ <1> 1 =
-    2147483645 6289 GCF .s drop  \ <1> 19 =
+    0 0 GCF .s 0= confirm  \ input error
+    1 0 GCF .s 1 = confirm  \ exit case
+    0 1 GCF .s 1 = confirm  \ rev exit
+    2 1 GCF .s 1 = confirm  \ n1 > n2
+    1 2 GCF .s 1 = confirm  \ n1 < n2
+    1 1 GCF .s 1 = confirm
+    -1 1 GCF .s 1 = confirm
+    1 -1 GCF .s 1 = confirm
+    -1 -1 GCF .s 1 = confirm
+    2 2 GCF .s 2 = confirm  \ n1 = n2
+    -2 2 GCF .s 2 = confirm  \ -n1 = n2
+    2 -2 GCF .s 2 = confirm  \ n1 = -n2
+    2 4 GCF .s 2 = confirm
+    4 2 GCF .s 2 = confirm
+    -2 4 GCF .s 2 = confirm
+    4 -2 GCF .s 2 = confirm
+    2 -4 GCF .s 2 = confirm
+    -4 2 GCF .s 2 = confirm
+    65536 256 GCF .s 256 = confirm
+    65537 257 GCF .s 1 = confirm
+    2147483645 6289 GCF .s 19 = confirm
   #+end_src
 
 - LCM “Least Common Multiple” ::
@@ -110,8 +115,8 @@ These generally useful functions are used by some “rat” functions below.
   integers. If either input is zero, making GCF 0, return 0.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : LCM ( n1 n2 -- n-lcm )
-      \ Find the positive least common multiple of two signed non-zero integers.
+    : LCM ( n1 n2 -- n ) \ rational "Least Common Multiple"
+      \ Return the positive signed integer least common multiple of two signed non-zero integers.
       2dup GCF
       dup
       if  \ if GCF <> 0
@@ -124,15 +129,15 @@ These generally useful functions are used by some “rat” functions below.
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
     .s  \ <0> =
-    0 0 LCM .s drop  \ input error <1> 0 =
-    1 0 LCM .s drop  \ GCD exit case <1> 0 =
-    0 1 LCM .s drop  \ GCD rev exit case <1> 0 =
-    2 1 LCM .s drop  \ <1> 2 =
-    1 2 LCM .s drop  \ <1> 2 =
-    1 1 LCM .s drop  \ <1> 1 =
-    1 -1 LCM .s drop  \ <1> 1 =
-    -1 1 LCM .s drop  \ <1> 1 =
-    65537 257 LCM .s drop \ <1> 16843009 =
+    0 0 LCM .s 0= confirm  \ input error
+    1 0 LCM .s 0= confirm  \ GCD exit case
+    0 1 LCM .s 0= confirm  \ GCD rev exit case
+    2 1 LCM .s 2 = confirm
+    1 2 LCM .s 2 = confirm
+    1 1 LCM .s 1 = confirm
+    1 -1 LCM .s 1 = confirm
+    -1 1 LCM .s 1 = confirm
+    65537 257 LCM .s 16843009 = confirm
   #+end_src
 
 - CTZ “Count Trailing Zeros” ::
@@ -150,7 +155,8 @@ These generally useful functions are used by some “rat” functions below.
   | 00000000000000000000000000000000 |      32 |
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : CTZ ( n -- tz )
+    : CTZ ( w -- u ) \ rational "Count Trailing Zeros"
+	  \  Count trailing zero bits of an single integer, returning int
       dup negate and  \ isolate trailing 1-bit
       32 swap  \ initialize count to 32
       dup if swap 1- swap then
@@ -165,14 +171,14 @@ These generally useful functions are used by some “rat” functions below.
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
     .s  \ <0> =
-    0 CTZ .s drop  \ <1> 32 =
-    $80000000 CTZ .s drop  \ <1> 31 =
-    $40000000 CTZ .s drop  \ <1> 30 =
-    $60000000 CTZ .s drop  \ <1> 29 =
-    $70000000 CTZ .s drop  \ <1> 28 =
-    1 CTZ .s drop  \ <1> 0 =
-    2 CTZ .s drop  \ <1> 1 =
-    12 CTZ .s drop  \ <1> 2 =
+    0 CTZ .s 32 = confirm
+    $80000000 CTZ .s 31 = confirm
+    $40000000 CTZ .s 30 = confirm
+    $60000000 CTZ .s 29 = confirm
+    $70000000 CTZ .s 28 = confirm
+    1 CTZ .s 0= confirm
+    2 CTZ .s 1 = confirm
+    12 CTZ .s 2 = confirm
   #+end_src
 
 ** Variables and Constants
@@ -184,10 +190,10 @@ These generally useful functions are used by some “rat” functions below.
   constant.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : ratConstant ( n-N n-D "name" -- )
-      \ allocate and initialize a rational constant
+    : ratConstant ( num den "name" -- ) \ rational "rat-constant"
+      \ Allocate and initialize a rational constant word
       create 2,
-    does> ( -- n-N n-D )
+    does> ( -- num den )
       2@ ;
   #+end_src
 
@@ -246,15 +252,15 @@ These generally useful functions are used by some “rat” functions below.
   #+end_src
 
 - ratVariable ::
-  Allocates a 2-cell rational variable to store one single-precision signed
-  numerator and one single-precision signed denominator.  The variable
+  Allocates a 2-cell rational variable to store one single signed integer
+  numerator and one single signed integer denominator.  The variable
   is initialized to zero, with a numerator of 0 and a denominator of 1.
 
   The name of the new variable subsequently returns the address of the
   variable.
   
   #+begin_src forth :tangle rat-math-lib.fs
-    : ratVariable ( “name” -- a-addr )
+    : ratVariable ( “name” -- a-addr ) \ rational "rat-variable"
       \ Allocate and initialize a rational variable to zero.
       create RatZero 2, ;  \ Initialize to rational 0/1
   #+end_src
@@ -270,7 +276,9 @@ These generally useful functions are used by some “rat” functions below.
   “rat@” is an alias of  “2@”.
   
   #+begin_src forth :tangle rat-math-lib.fs
-    ' 2@ Alias rat@  \ rat@ is an alias of 2@
+    \ : rat@ ( -- num den ) \ rational "rat-fetch"
+      \ rat@ is identical to 2@
+      ' 2@ Alias rat@
   #+end_src
 
 - rat! “rat store” ::
@@ -283,19 +291,21 @@ These generally useful functions are used by some “rat” functions below.
   “rat!” is an alias of “2!”.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    ' 2! Alias rat!  \ rat! is an alias of 2!
+    \ : rat! ( num den -- ) \ rational "rat-store"
+      \ rat! is identical to 2!
+      ' 2! Alias rat!
   #+end_src
 
 Tests:
   #+begin_src forth :tangle rat-math-lib-tests.fs
     .s  \ <0> =
-    ratVariable rx .s  \ <0> =
-    rx .s  \ <1> addr? =
-    rat@ .s 2drop  \ <2> 0 1 =
-    -2 3 rx rat! .s  \ <0> =
-    rx rat@ .s 2drop  \ <2> -2 3 =
-    -2147483648 2147483647 rx rat! .s  \ <0> =
-    rx rat@ .s 2drop  \ <2> -2147483648 2147483647 =
+    ratVariable rx .s
+    rx .s
+    rat@ .s 0 1 2= confirm
+    -2 3 rx rat! .s
+    rx rat@ .s -2 3 2= confirm
+    -2147483648 2147483647 rx rat! .s
+    rx rat@ .s -2147483648 2147483647 2= confirm
   #+end_src
 
 ** Conversions
@@ -305,7 +315,7 @@ Tests:
   of 1.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : n>rat ( n -- n-N 1 )
+    : n>rat ( n -- num 1 )
       \ Convert a single signed integer to rational
       1 ;
   #+end_src
@@ -338,7 +348,7 @@ Tests:
   a numerator of 1.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : 1/n>rat ( n -- 1 n-D )
+    : 1/n>rat ( n -- 1 den )
       \ Invert a single signed integer, converting to rational
       1 swap ;
   #+end_src
@@ -418,7 +428,7 @@ Tests:
   Convert a rational number to floating point.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : rat>f ( n-N n-D -- ) ( F: -- f )
+    : rat>f ( num den -- ) ( F: -- f )
       \ Convert a rational number to floating point
       2dup 0< swap 0= and
       if  \ is 0/neg aka -0
@@ -472,7 +482,7 @@ Tests:
   rational number. If out of rational range, return NaN (0/0).
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : ex8f23>rat { ex8 f23 -- n-N n-D }
+    : ex8f23>rat { ex8 f23 -- num den }
 		\ Convert a normal IEEE float exponent and fraction to rational.
 		\ ex8: 8 bit unsigned 0-255 IEEE float exponent, right justified
 		\ fr23 : 23-bit unsigned float fraction (sans implied 1 in bit 24)
@@ -496,7 +506,7 @@ Tests:
   #+begin_src forth :tangle rat-math-lib.fs
     variable f32ieee  \ Entire 32-bit ieee float buffer
 
-    : f>rat ( f -- n-N n-D)
+    : f>rat ( f -- num den)
       \ Convert a floating point number to a rational number.
       f32ieee sf!  \ store the given float as 32 bits
       f32ieee @ $007FFFFF and  \ 23-bit fraction part of float, with bit 24 set
@@ -569,7 +579,7 @@ Tests:
   Ensure that the denominator is not negative when the numerator is non-zero.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : ratFixSign ( n-N n-D -- nNum n-Den )
+    : ratFixSign ( num den -- nNum denen )
       \ Ensure that the denominator is not negative when the numerator is non-zero.
       dup 0<  \ denom < 0 ?
       if
@@ -618,7 +628,7 @@ Tests:
   factor, if the GCF is greater than one.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : ratReduce ( n-N n-D -- n-N1 n-D1 )
+    : ratReduce ( num den -- num1 den1 )
       \ if both terms are non-zero and the GCF is > 1, reduce to lowest terms.
       dup  \ numer <> 0 ?
       if
@@ -626,10 +636,10 @@ Tests:
 	if
 	  2dup GCF  \ find GCF (which is positive)
 	  dup 1-  \ GCF > 1 ?
-	  if ( -- n-N n-D GCF )
-	    dup -rot ( -- n-N GCF n-D GCF )
-	    2swap / -rot  \ numer=numer/GCF ( -- n-N1 n-D GCF )
-	    /  \ denom=denom/GCF ( -- n-N1 n-D1 )
+	  if ( -- num den GCF )
+	    dup -rot ( -- num GCF den GCF )
+	    2swap / -rot  \ numer=numer/GCF ( -- num1 den GCF )
+	    /  \ denom=denom/GCF ( -- num1 den1 )
 	  else
 	    drop  \ drop GCF of 1
 	  then
@@ -755,3 +765,18 @@ Tests:
   #+end_src
 
 ** Comparisons
+
+- rat= “rat-equals” ::
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    : rat= ( num1 den1 num2 den2 -- f ) \ rational "rat-equals"
+      \ compare 1st rational with 2nd ration for equality
+      \ normalizes both rational, then double-tests for equality
+      \ 2swap ratNormal 2swap ratNormal
+      swap -rot = -rot = and ;
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+  #+end_src
