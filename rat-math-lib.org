@@ -53,12 +53,9 @@ The file rat-math-lib.fs contains the rational math library:
 The file rat-math-lib-tests.fs contains the test suite for the library:
 
 #+begin_src forth :tangle rat-math-lib-tests.fs
+  \ ----------------------------------------------------------------
   \ Test Suite for rat-math-lib.fs
   : confirm if ." Pass " else ." Fail " bye then ;  \ immediate assert( )
-
-  : 2= ( n1 n2 n3 n4 -- f ) \ rat-test "two-equals"
-       \ first two singles equal second two singles ( n1 = n3 AND n2 = n4 )
-       swap -rot = -rot = and ;
 #+end_src
 
 * Words
@@ -75,13 +72,13 @@ These generally useful functions are used by some “rat” functions below.
 
   #+begin_src forth :tangle rat-math-lib.fs
     : GCF ( n1 n2 -- n ) \ rational "Greatest Common Factor"
-      \ Return the positive signed integer greatest common factor of 2 signed non-0 ints
-      begin
-	?dup
-      while
-	tuck mod  \ mod naturally swaps n1 n2 when n1 < n2
-      repeat
-      abs ;
+	\ Return the positive signed integer greatest common factor
+	\ of 2 signed non-0 ints
+	begin
+	    ?dup while
+		tuck mod  \ mod naturally swaps n1 n2 when n1 < n2
+	repeat
+	abs ;
   #+end_src
 
   Tests:  
@@ -116,14 +113,14 @@ These generally useful functions are used by some “rat” functions below.
 
   #+begin_src forth :tangle rat-math-lib.fs
     : LCM ( n1 n2 -- n ) \ rational "Least Common Multiple"
-      \ Return the positive signed integer least common multiple of two signed non-zero integers.
-      2dup GCF
-      dup
-      if  \ if GCF <> 0
-	,*/ abs
-      else
-	drop 2drop 0  \ error: cleanup, return 0
-      then ;
+	\ Return the positive signed integer least common multiple
+	\ of two signed non-zero integers.
+	2dup GCF
+	dup if  \ if GCF <> 0
+	    ,*/ abs
+	else
+	    drop 2drop 0  \ error: cleanup, return 0
+	then ;
   #+end_src
 
   Tests:  
@@ -156,16 +153,16 @@ These generally useful functions are used by some “rat” functions below.
 
   #+begin_src forth :tangle rat-math-lib.fs
     : CTZ ( w -- u ) \ rational "Count Trailing Zeros"
-	  \  Count trailing zero bits of an single integer, returning int
-      dup negate and  \ isolate trailing 1-bit
-      32 swap  \ initialize count to 32
-      dup if swap 1- swap then
-      dup $0000FFFF and if swap 16 - swap then
-      dup $00FF00FF and if swap 8 - swap then
-      dup $0F0F0F0F and if swap 4 - swap then
-      dup $33333333 and if swap 2 - swap then
-      dup $55555555 and if swap 1- swap then
-      drop ;  \ drop the input
+	\  Count trailing zero bits of an single integer, returning int
+	dup negate and  \ isolate trailing 1-bit
+	32 swap  \ initialize count to 32
+	dup if swap 1- swap then
+	dup $0000FFFF and if swap 16 - swap then
+	dup $00FF00FF and if swap 8 - swap then
+	dup $0F0F0F0F and if swap 4 - swap then
+	dup $33333333 and if swap 2 - swap then
+	dup $55555555 and if swap 1- swap then
+	drop ;  \ drop the input
   #+end_src
 
   Tests:  
@@ -191,10 +188,10 @@ These generally useful functions are used by some “rat” functions below.
 
   #+begin_src forth :tangle rat-math-lib.fs
     : ratConstant ( num den "name" -- ) \ rational "rat-constant"
-      \ Allocate and initialize a rational constant word
-      create 2,
-    does> ( -- num den )
-      2@ ;
+	\ Allocate and initialize a rational constant word
+	create 2,
+      does> ( -- num den )
+	2@ ;
   #+end_src
 
 - Useful constants ::
@@ -277,8 +274,8 @@ These generally useful functions are used by some “rat” functions below.
   
   #+begin_src forth :tangle rat-math-lib.fs
     \ : rat@ ( -- num den ) \ rational "rat-fetch"
-      \ rat@ is identical to 2@
-      ' 2@ Alias rat@
+    \ rat@ is identical to 2@
+    ' 2@ Alias rat@
   #+end_src
 
 - rat! “rat store” ::
@@ -292,8 +289,8 @@ These generally useful functions are used by some “rat” functions below.
 
   #+begin_src forth :tangle rat-math-lib.fs
     \ : rat! ( num den -- ) \ rational "rat-store"
-      \ rat! is identical to 2!
-      ' 2! Alias rat!
+    \ rat! is identical to 2!
+    ' 2! Alias rat!
   #+end_src
 
 Tests:
@@ -301,11 +298,11 @@ Tests:
     .s  \ <0> =
     ratVariable rx .s
     rx .s
-    rat@ .s 0 1 2= confirm
+    rat@ .s 0 1 d= confirm
     -2 3 rx rat! .s
-    rx rat@ .s -2 3 2= confirm
+    rx rat@ .s -2 3 d= confirm
     -2147483648 2147483647 rx rat! .s
-    rx rat@ .s -2147483648 2147483647 2= confirm
+    rx rat@ .s -2147483648 2147483647 d= confirm
   #+end_src
 
 ** Conversions
@@ -315,9 +312,9 @@ Tests:
   of 1.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : n>rat ( n -- num 1 )
-      \ Convert a single signed integer to rational
-      1 ;
+    : n>rat ( num -- num 1 ) \ rational "int to rational"
+	\ Convert a single signed integer to rational
+	1 ;
   #+end_src
 
   Works for:
@@ -336,21 +333,21 @@ Tests:
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
     .s  \ <0> =
-    0 n>rat .s 2drop  \ <2> 0 1 =
-    1 n>rat .s 2drop  \ <2> 1 1 =
-    -1 n>rat .s 2drop  \ <2> -1 1 =
-    2147483647 n>rat .s 2drop  \ <2> 2147483647 1 =
-    -2147483647 n>rat .s 2drop  \ <2> -2147483647 1 =
+    0 n>rat .s 0 1 d= confirm
+    1 n>rat .s 1 1 d= confirm
+    -1 n>rat .s -1 1 d= confirm
+    2147483647 n>rat .s 2147483647 1 d= confirm
+    -2147483647 n>rat .s -2147483647 1 d= confirm
   #+end_src
 
 - 1/n>rat “inverse n to rat” ::
-  Invert a single signed integer, converting to rational by prepending
+  Invert a single signed integer, converting to rational by pre-pending
   a numerator of 1.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : 1/n>rat ( n -- 1 den )
-      \ Invert a single signed integer, converting to rational
-      1 swap ;
+    : 1/n>rat ( n -- 1 den ) \ rational "inverse int to rational"
+	\ Invert a single signed integer, converting to rational
+	1 swap ;
   #+end_src
 
   Works for:
@@ -369,31 +366,33 @@ Tests:
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
     .s  \ <0> =
-    0 1/n>rat .s 2drop  \ <2> 1 0 =
-    1 1/n>rat .s 2drop  \ <2> 1 1 =
-    -1 1/n>rat .s 2drop  \ <2> 1 -1 =
-    2147483647 1/n>rat .s 2drop  \ <2> 1 2147483647 =
-    -2147483647 1/n>rat .s 2drop  \ <2> 1 -2147483647 =
+    0 1/n>rat .s 1 0 d= confirm
+    1 1/n>rat .s 1 1 d= confirm
+    -1 1/n>rat .s 1 -1 d= confirm
+    2147483647 1/n>rat .s 1 2147483647 d= confirm
+    -2147483647 1/n>rat .s 1 -2147483647 d= confirm
   #+end_src
 
-- rat>n ::
-  Convert a rational number to single precision signed integer.
+- ratFixSign “rat fix sign” ::
+  Ensure that the denominator is not negative when the numerator is non-zero.
 
-  “rat>n” is an alias of “/”. Rounding is toward negative infinity by
-  default (i.e. floor), not the closest integer.
-
-  Use “swap s>d swap sm/rem” for symmetric division with remainder.
-  
   #+begin_src forth :tangle rat-math-lib.fs
-    ' / Alias rat>n  \ rat>n is an alias of /
+    : ratFixSign ( num den -- nNum denen ) \ rational “Rational Fix Sign”
+	\ Ensure that the denominator is not negative when the numerator is non-zero.
+	dup 0<  \ denom < 0 ?
+	if over  \ numer <> 0 ?
+	    if swap negate swap  \ negate numer
+		negate  \ negate denom
+	    then
+	then ;
   #+end_src
 
   Works for:
   - [X] +0
   - [X] -0
-  - [-] +Inf
-  - [-] -Inf
-  - [-] NaN
+  - [X] +Inf
+  - [X] -Inf
+  - [X] NaN
   - [X] +1
   - [X] -1
   - [X] +2147483647
@@ -404,38 +403,88 @@ Tests:
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
     .s  \ <0> =
-    RatZero rat>n .s drop  \ <1> 0 =
-    RatNegZero rat>n .s drop  \ <1> 0 =
-    RatPosOne rat>n .s drop \ <1> 1 =
-    RatNegOne rat>n .s drop  \ <1> -1 =
-    ratPosMax rat>n .s drop  \ <1> 2147483647 =
-    ratNegMax rat>n .s drop  \ <1> -2147483648 =
-    ratPosMin rat>n .s drop  \ <1> 0 =
-    ratNegMin rat>n .s drop  \ <1> -1 =
-    1 2 rat>n .s drop  \ <1> 0 =
-    1 3 rat>n .s drop  \ <1> 0 =
-    2 3 rat>n .s drop  \ <1> 0 =
-    3 2 rat>n .s drop  \ <1> 1 =
-    3 3 rat>n .s drop  \ <1> 1 =
-    -1 2 rat>n .s drop  \ <1> -1 =
-    -1 3 rat>n .s drop  \ <1> -1 =
-    -2 3 rat>n .s drop  \ <1> -1 =
-    -3 2 rat>n .s drop  \ <1> -2 =
-    -3 3 rat>n .s drop  \ <1> -2 =
+    RatZero ratFixSign .s 0 1 d= confirm
+    RatNegZero ratFixSign .s 0 -1 d= confirm
+    RatPosInf ratFixSign .s 1 0 d= confirm
+    RatNegInf ratFixSign .s -1 0 d= confirm
+    RatNaN ratFixSign .s 0 0 d= confirm
+    RatPosOne ratFixSign .s 1 1 d= confirm
+    RatNegOne ratFixSign .s -1 1 d= confirm
+    -1 -1 ratFixSign .s RatPosOne d= confirm
+    1 -1 ratFixSign .s RatNegOne d= confirm
+    RatPosMax ratFixSign .s 2147483647 1 d= confirm
+    RatNegMax ratFixSign .s -2147483648 1 d= confirm
+    -2147483647 -1 ratFixSign .s RatPosMax d= confirm
+    2147483648 -1 ratFixSign .s RatNegMax d= confirm
+    RatPosMin ratFixSign .s 1 2147483647 d= confirm
+    RatNegMin ratFixSign .s -1 2147483647 d= confirm
+    -1 -2147483647 ratFixSign .s RatPosMin d= confirm
+    1 -2147483647  ratFixSign .s RatNegMin d= confirm
+    2 3 ratFixSign .s 2 3 d= confirm
+    -2 3 ratFixSign .s -2 3 d= confirm
+    -2 -3 ratFixSign .s 2 3 d= confirm
+    2 -3 ratFixSign .s -2 3 d= confirm
+  #+end_src
+
+- rat>n ::
+  Convert a rational number to single precision signed integer,
+  rounding to the closest integer. Use a bare “/” to truncate toward -infinity.
+  
+  #+begin_src forth :tangle rat-math-lib.fs
+    : rat>n { num den -- n } \ rational "Rational to integer"
+      num 0< den 0< xor if \ if the signs of numerator and denominator are opposite
+	  num den s>d 2 sm/rem swap drop -   \ bias the numerator down den/2...
+      else
+	  num den s>d 2 sm/rem swap drop + \ bias the numerator up den/2...
+      then
+      s>d den sm/rem swap drop ; \ then divide, dropping remainder
+  #+end_src
+
+  Works for:
+  - [X] +0
+  - [X] -0
+  - [ ] +Inf
+  - [ ] -Inf
+  - [ ] NaN
+  - [X] +1
+  - [X] -1
+  - [X] +2147483647
+  - [X] -2147483648
+  - [X] +1/2147483647
+  - [X] -1/2147483647
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    .s  \ <0> =
+    RatZero rat>n .s 0= confirm
+    RatNegZero rat>n .s 0= confirm
+    RatPosOne rat>n .s 1 = confirm
+    RatNegOne rat>n .s -1 = confirm
+    ratPosMax rat>n .s 2147483647 = confirm
+    ratNegMax rat>n .s -2147483648 = confirm
+    ratPosMin rat>n .s 0= confirm
+    ratNegMin rat>n .s 0= confirm
+    1 2 rat>n .s 1 = confirm
+    -1 2 rat>n .s -1 = confirm
+   -1 -2 rat>n .s 1 = confirm
+    1 -2 rat>n .s -1 = confirm
+    1 3 rat>n .s 0= confirm
+    -1 3 rat>n .s 0= confirm
+    -1 -3 rat>n .s 0= confirm
+    1 -3 rat>n .s 0= confirm
   #+end_src
 
 - rat>f ::
   Convert a rational number to floating point.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : rat>f ( num den -- ) ( F: -- f )
-      \ Convert a rational number to floating point
-      2dup 0< swap 0= and
-      if  \ is 0/neg aka -0
-	2drop -0.0e0  \ handle -0e0 case
-      else
-	swap s>f s>f f/  \ s>f moves ints to float stack, reversing order.
-      then ;
+    : rat>f ( num den -- ) ( F: -- f ) \ rational "Rational to Float"
+	\ Convert a rational number to floating point
+	2dup 0< swap 0= and if  \ is 0/neg aka -0
+	    2drop -0.0e0  \ handle -0e0 case
+	else
+	    swap s>f s>f f/  \ s>f moves ints to float stack, reversing order.
+	then ;
   #+end_src
 
   Works for:
@@ -454,27 +503,37 @@ Tests:
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
     .s ." F: " f.s  \ <0> F: <0> =
-    ratZero rat>f .s ." F: " f.s fdrop  \ <0> F: <1> 0.000000000000E0 =
-    ratNegZero rat>f f>rat .s ." F: " f.s 2drop  \ <0> 0 -1 F: <0> =
-    ratPosInf rat>f .s ." F: " f.s fdrop  \ <0> F: <1> inf =
-    ratNegInf rat>f .s ." F: " f.s fdrop  \ <0> F: <1> -inf =
-    ratNaN rat>f .s ." F: " f.s fdrop  \ <0> F: <1> -nan =
-    ratPosOne rat>f .s ." F: " f.s fdrop  \ <0> F: <1> 1.000000000000E0 =
-    ratNegOne rat>f .s ." F: " f.s fdrop  \ <0> F: <1> -1.00000000000E0 =
-    ratPosMax rat>f .s ." F: " f.s fdrop  \ <0> F: <1> 2147483647.00000 =
-    ratNegMax rat>f .s ." F: " f.s fdrop  \ <0> F: <1> -2.14748364800E9 =
-    ratPosMin rat>f .s ." F: " f.s fdrop  \ <0> F: <1> 4.6566128752E-10 =
-    ratNegMin rat>f .s ." F: " f.s fdrop  \ <0> F: <1> -4.656612875E-10 =
-    1 2 rat>f .s ." F: " f.s fdrop  \ <1> 0 =
-    1 3 rat>f .s ." F: " f.s fdrop  \ <1> 0 =
-    2 3 rat>f .s ." F: " f.s fdrop  \ <1> 0 =
-    3 2 rat>f .s ." F: " f.s fdrop  \ <1> 1 =
-    3 3 rat>f .s ." F: " f.s fdrop  \ <1> 1 =
-    -1 2 rat>f .s ." F: " f.s fdrop  \ <1> 0 =
-    -1 3 rat>f .s ." F: " f.s fdrop  \ <1> 0 =
-    -2 3 rat>f .s ." F: " f.s fdrop  \ <1> 0 =
-    -3 2 rat>f .s ." F: " f.s fdrop  \ <1> 1 =
-    -3 3 rat>f .s ." F: " f.s fdrop  \ <1> 1 =
+    ratZero rat>f .s ." F: " f.s 0.0e0 f= confirm
+    ratNegZero rat>f .s ." F: " f.s f>rat .s ." F: " f.s ratNegZero d= confirm
+    ratPosInf rat>f .s ." F: " f.s f>rat .s ." F: " f.s ratPosInf d= confirm
+    ratNegInf rat>f .s ." F: " f.s f>rat .s ." F: " f.s ratNegInf d= confirm
+    ratNaN rat>f .s ." F: " f.s f>rat .s ." F: " f.s ratNaN d= confirm
+    ratPosOne rat>f .s ." F: " f.s 1.0e0 f= confirm
+    ratNegOne rat>f .s ." F: " f.s -1.0e0 f= confirm
+    ratPosMax rat>f .s ." F: " f.s 2147483647.E0 f= confirm
+    ratNegMax rat>f .s ." F: " f.s -2147483648.E0 f= confirm
+    ratPosMin rat>f .s ." F: " f.s 4.6566128752E-10 f- fabs 1.e-11 f< confirm
+    ratNegMin rat>f .s ." F: " f.s -4.6566128752E-10 f- fabs 1.e-11 f< confirm
+    1 2 rat>f .s ." F: " f.s 0.5e0 f= confirm
+    -1 2 rat>f .s ." F: " f.s -0.5e0 f= confirm
+    -1 -2 rat>f .s ." F: " f.s 0.5e0 f= confirm
+    1 -2 rat>f .s ." F: " f.s -0.5e0 f= confirm
+    1 3 rat>f .s ." F: " f.s 0.333333333333e0 f- fabs 1.e-12 f< confirm
+    -1 3 rat>f .s ." F: " f.s -0.333333333333e0 f- fabs 1.e-12 f< confirm
+    -1 -3 rat>f .s ." F: " f.s 0.333333333333e0 f- fabs 1.e-12 f< confirm
+    1 -3 rat>f .s ." F: " f.s -0.333333333333e0 f- fabs 1.e-12 f< confirm
+    2 3 rat>f .s ." F: " f.s 0.666666666666e0 f- fabs 1.e-12 f< confirm
+    -2 3 rat>f .s ." F: " f.s -0.666666666666e0 f- fabs 1.e-12 f< confirm
+    -2 -3 rat>f .s ." F: " f.s 0.666666666666e0 f- fabs 1.e-12 f< confirm
+    2 -3 rat>f .s ." F: " f.s -0.666666666666e0 f- fabs 1.e-12 f< confirm
+    3 2 rat>f .s ." F: " f.s 1.5e0 f= confirm
+    -3 2 rat>f .s ." F: " f.s -1.5e0 f= confirm
+    -3 -2 rat>f .s ." F: " f.s 1.5e0 f= confirm
+    3 -2 rat>f .s ." F: " f.s -1.5e0 f= confirm
+    3 3 rat>f .s ." F: " f.s 1.e0 f= confirm
+    -3 3 rat>f .s ." F: " f.s -1.e0 f= confirm
+    -3 -3 rat>f .s ." F: " f.s 1.e0 f= confirm
+    3 -3 rat>f .s ." F: " f.s -1.e0 f= confirm
   #+end_src
 
 - e8f23>rat ::
@@ -483,21 +542,20 @@ Tests:
 
   #+begin_src forth :tangle rat-math-lib.fs
     : ex8f23>rat { ex8 f23 -- num den }
-		\ Convert a normal IEEE float exponent and fraction to rational.
-		\ ex8: 8 bit unsigned 0-255 IEEE float exponent, right justified
-		\ fr23 : 23-bit unsigned float fraction (sans implied 1 in bit 24)
-		\ Does not handle +/- infinity or NaN.
-		\ Returns rational NaN (0/0) if out of rational range.
-		f23 $00800000 or cr ." N24: " ['] .s 16 base-execute ( -- N24 )  \ attach the silent 1 at bit 24
-		dup CTZ cr ." N24 tz: " ['] .s 16 base-execute ( -- N24 tz )  \ trailing zeros is 0 to 23
-		$00800000 swap cr ." N24 D24 tz: " ['] .s 16 base-execute ( -- N24 D24 tz )
-		drop 2drop
-		;
-  #+end_src
-
-  Tests:  
-  #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
+	\ Convert a normal IEEE float exponent and fraction to rational.
+	\ ex8: 8 bit unsigned 0-255 IEEE float exponent, right justified
+	\ fr23 : 23-bit unsigned float fraction (sans implied 1 in bit 23)
+	\ Does not handle Zero, -Zero, +/- infinity or NaN.
+	\ Returns NaN (0/0) if out of rational range.
+	f23 $00800000 or  \ base 24-bit numerator
+	dup CTZ  \ trailing zeros is 0 to 23
+	$00800000  \ base 24-bit denominator
+	ex8 127 -  \ 2^exp exponent
+	.s { n24 tz d24 exp }
+	exp if
+	
+	then
+	RatPosOne ;
   #+end_src
 
 - f>rat “Float to Rational” ::
@@ -505,48 +563,37 @@ Tests:
 
   #+begin_src forth :tangle rat-math-lib.fs
     variable f32ieee  \ Entire 32-bit ieee float buffer
-
     : f>rat ( f -- num den)
-      \ Convert a floating point number to a rational number.
-      f32ieee sf!  \ store the given float as 32 bits
-      f32ieee @ $007FFFFF and  \ 23-bit fraction part of float, with bit 24 set
-      f32ieee @ $7F800000 and 23 rshift  \ exponent of float, shifted down 23 bits.
-      f32ieee @ $80000000 and  \ negative sign of float
-      { f32frac f32expo f32sign }
-
-      \ debug dumps
-      ." | "
-      f32sign if ." -" else ." +" then
-      ." $1." f32frac hex . decimal
-      ." * 2^(" f32expo . ." -127) "
-      ." | "
-
-      f32expo $FF =
-      if  \ expo = special 255 ?
-	f32frac
-	if  \ frac <> 0 ?
-	  ratNan  \ non-a-number
-	else  \ +/- inf
-	  f32sign
-	  if  \ negative ?
-	    ratNegInf
-	  else
-	    ratPosInf
-	  then
-	then
-      else
-	f32expo 0= f32frac 0= and
-	if  \ expo = 0 and frac = 0
-	  f32sign
-	  if  \ negative ?
-	    ratNegZero
-	  else
-	    ratZero
-	  then
+	\ Convert a floating point number to a rational number.
+	f32ieee sf!  \ store the given float as 32 bits
+	f32ieee @ $007FFFFF and  \ 23-bit fraction part of float, with bit 23 set
+	f32ieee @ $7F800000 and 23 rshift  \ exponent of float, shifted 
+	f32ieee @ $80000000 and  \ negative sign of float
+	{ f32frac f32expo f32sign }
+	f32expo $FF = if  \ expo = special 255 ?
+	    f32frac if  \ frac <> 0 ?
+		ratNan  \ non-a-number
+	    else  \ +/- inf
+		f32sign if  \ negative ?
+		    ratNegInf
+		else
+		    ratPosInf
+		then
+	    then
 	else
-	  f32expo f32frac ex8f23>rat  \ Convert normal exponent and fraction to rational
-	then
-      then ;
+	    f32expo 0= f32frac 0= and if  \ expo = 0 and frac = 0
+		f32sign if  \ negative ?
+		    ratNegZero
+		else
+		    ratZero
+		then
+	    else
+		f32expo f32frac ex8f23>rat  \ Convert  exponent and fraction to rational
+		f32sign if  \ is negative?
+		    swap negate swap
+		then  \ negate the numerator
+	    then
+	then ;
   #+end_src
 
   Works for:
@@ -565,62 +612,15 @@ Tests:
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
     .s ." F: " f.s  \ <0> F: <0> =
-    0.0e0 f.s ." -- " f>rat .s 2drop  \ <1> 0e0 -- <2> 0 1 =
-    -0.0e0 f.s ." -- " f>rat .s 2drop  \ <1> 0e0 -- <2> 0 -1 =
-    1.0e0 0.0e0 f/ f.s ." -- " f>rat .s 2drop  \ <1> inf -- <2> 1 0 =
-    -1.0e0 0.0e0 f/ f.s ." -- " f>rat .s 2drop  \ <1> -inf -- <2> -1 0 =
-    0.0e0 0.0e0 f/ f.s ." -- " f>rat .s 2drop  \ <1> nan -- <2> 0 0 =
-    1.0e0 f.s ." -- " f>rat .s 2drop  \ <1> 1e0 -- <2> 1 1 =
-    -1.0e0 f.s ." -- " f>rat .s 2drop  \ <1> -1e0 -- <2> -1 1 =
+    0.0e0 f>rat .s RatZero d= confirm
+    -0.0e0 f>rat .s RatNegZero d= confirm
+    1.0e0 0.0e0  f/ f>rat .s RatPosInf d= confirm
+    -1.0e0 0.0e0 f/ f>rat .s RatNegInf d= confirm
+    0.0e0 0.0e0  f/ f>rat .s RatNan d= confirm
+    1.0e0 f>rat .s RatPosOne d= confirm
+    -1.0e0 f>rat .s RatNegOne d= confirm
   #+end_src
 
-
-- ratFixSign “rat fix sign” ::
-  Ensure that the denominator is not negative when the numerator is non-zero.
-
-  #+begin_src forth :tangle rat-math-lib.fs
-    : ratFixSign ( num den -- nNum denen )
-      \ Ensure that the denominator is not negative when the numerator is non-zero.
-      dup 0<  \ denom < 0 ?
-      if
-	over  \ numer <> 0 ?
-	if
-	  swap negate swap  \ negate numer
-	  negate  \ negate denom
-	then
-      then ;
-  #+end_src
-
-  Works for:
-  - [ ] +0
-  - [ ] -0
-  - [ ] +Inf
-  - [ ] -Inf
-  - [ ] NaN
-  - [ ] +1
-  - [ ] -1
-  - [ ] +2147483647
-  - [ ] -2147483648
-  - [ ] +1/2147483647
-  - [ ] -1/2147483647
-
-  Tests:  
-  #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
-    0 1 ratFixSign .s 2drop  \ 0  <2> 0 1 =
-    0 -1 ratFixSign .s 2drop  \ -1 <2> 0 -1 =
-    1 0 ratFixSign .s 2drop  \ inf <2> 1 0 =
-    -1 0 ratFixSign .s 2drop  \ -inf <2> -1 0 =
-    0 0 ratFixSign .s 2drop  \ nan <2> 0 0 =
-    1 1 ratFixSign .s 2drop  \ nan <2> 1 1 =
-    -1 1 ratFixSign .s 2drop  \ nan <2> -1 1 =
-    -1 -1 ratFixSign .s 2drop  \ nan <2> 1 1 =
-    1 -1 ratFixSign .s 2drop  \ nan <2> -1 1 =
-    2 3 ratFixSign .s 2drop  \ nan <2> 2 3 =
-    -2 3 ratFixSign .s 2drop  \ nan <2> -2 3 =
-    -2 -3 ratFixSign .s 2drop  \ nan <2> 2 3 =
-    2 -3 ratFixSign .s 2drop  \ nan <2> -2 3 =
-  #+end_src
 
 - ratReduce “rat reduce” ::
   Reduce the fraction to an equivalent one with the lowest terms by
@@ -629,27 +629,23 @@ Tests:
 
   #+begin_src forth :tangle rat-math-lib.fs
     : ratReduce ( num den -- num1 den1 )
-      \ if both terms are non-zero and the GCF is > 1, reduce to lowest terms.
-      dup  \ numer <> 0 ?
-      if
-	over  \ denom <> 0 ?
-	if
-	  2dup GCF  \ find GCF (which is positive)
-	  dup 1-  \ GCF > 1 ?
-	  if ( -- num den GCF )
-	    dup -rot ( -- num GCF den GCF )
-	    2swap / -rot  \ numer=numer/GCF ( -- num1 den GCF )
-	    /  \ denom=denom/GCF ( -- num1 den1 )
-	  else
-	    drop  \ drop GCF of 1
-	  then
-	then
-      then ;
+	\ if both terms are non-zero and the GCF is > 1, reduce to lowest terms.
+	dup if  \ numer <> 0 ?
+	    over if  \ denom <> 0 ?
+		2dup GCF  \ find GCF (which is positive)
+		dup 1- if   \ GCF > 1 ? ( -- num den GCF )
+		    dup -rot ( -- num GCF den GCF )
+		    2swap / -rot  \ numer=numer/GCF ( -- num1 den GCF )
+		    /  \ denom=denom/GCF ( -- num1 den1 )
+		else
+		    drop  \ drop GCF of 1
+		then
+	    then
+	then ;
   #+end_src
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 - ratNormal “rat normalize” ::
@@ -659,7 +655,6 @@ Tests:
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 ** Operations
@@ -671,7 +666,6 @@ Tests:
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 - rat1+ “rat one plus” :: 
@@ -681,7 +675,6 @@ Tests:
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 - rat- “rat minus” ::
@@ -691,7 +684,6 @@ Tests:
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 - rat1- “rat 1 minus” :: 
@@ -701,7 +693,6 @@ Tests:
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 - rat* “rat star” ::
@@ -711,7 +702,6 @@ Tests:
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 - rat/ “rat slash” ::
@@ -721,7 +711,6 @@ Tests:
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 - ratNegate “rat negate” ::
@@ -731,7 +720,6 @@ Tests:
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 - ratAbs “rat abs” ::
@@ -741,7 +729,6 @@ Tests:
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 - ratMin “rat min” ::
@@ -751,7 +738,6 @@ Tests:
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 - ratMax “rat max” :: 
@@ -761,7 +747,6 @@ Tests:
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
 
 ** Comparisons
@@ -770,13 +755,12 @@ Tests:
 
   #+begin_src forth :tangle rat-math-lib.fs
     : rat= ( num1 den1 num2 den2 -- f ) \ rational "rat-equals"
-      \ compare 1st rational with 2nd ration for equality
-      \ normalizes both rational, then double-tests for equality
-      \ 2swap ratNormal 2swap ratNormal
-      swap -rot = -rot = and ;
+	\ compare two rational numbers for equality
+	\ normalizes both rational, then tests for equality with d=
+	\ 2swap ratNormal 2swap ratNormal
+	d= ;
   #+end_src
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
-    .s  \ <0> =
   #+end_src
