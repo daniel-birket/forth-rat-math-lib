@@ -55,7 +55,7 @@ The file rat-math-lib-tests.fs contains the test suite for the library:
 #+begin_src forth :tangle rat-math-lib-tests.fs
   \ ----------------------------------------------------------------
   \ Test Suite for rat-math-lib.fs
-  : confirm if ." Pass " else ." Fail " bye then ;  \ immediate assert( )
+  : confirm if ." Pass " else ." Fail " bye endif ;  \ immediate assert( )
 #+end_src
 
 * Words
@@ -120,7 +120,7 @@ These generally useful functions are used by some “rat” functions below.
 	    ,*/ abs
 	else
 	    drop 2drop 0  \ error: cleanup, return 0
-	then ;
+	endif ;
   #+end_src
 
   Tests:  
@@ -156,12 +156,12 @@ These generally useful functions are used by some “rat” functions below.
 	\  Count trailing zero bits of an single integer, returning int
 	dup negate and  \ isolate trailing 1-bit
 	32 swap  \ initialize count to 32
-	dup if swap 1- swap then
-	dup $0000FFFF and if swap 16 - swap then
-	dup $00FF00FF and if swap 8 - swap then
-	dup $0F0F0F0F and if swap 4 - swap then
-	dup $33333333 and if swap 2 - swap then
-	dup $55555555 and if swap 1- swap then
+	dup if swap 1- swap endif
+	dup $0000FFFF and if swap 16 - swap endif
+	dup $00FF00FF and if swap 8 - swap endif
+	dup $0F0F0F0F and if swap 4 - swap endif
+	dup $33333333 and if swap 2 - swap endif
+	dup $55555555 and if swap 1- swap endif
 	drop ;  \ drop the input
   #+end_src
 
@@ -206,7 +206,7 @@ These generally useful functions are used by some “rat” functions below.
     1 1 ratConstant ratPosOne  \ +1
     -1 1 ratConstant ratNegOne  \ -1
     2147483647 1 ratConstant ratPosMax  \ Positive Max
-    -2147483648 1 ratConstant ratNegMax  \ Negative Max
+    -2147483647 1 ratConstant ratNegMax  \ Negative Max
     1 2147483647 ratConstant ratPosMin  \ Positive Min
     -1 2147483647 ratConstant ratNegMin  \ Negative Min
     355 113 ratConstant ratPi6  \ pi to 6 decimal places
@@ -383,8 +383,8 @@ Tests:
 	if over  \ numer <> 0 ?
 	    if swap negate swap  \ negate numer
 		negate  \ negate denom
-	    then
-	then ;
+	    endif
+	endif ;
   #+end_src
 
   Works for:
@@ -413,9 +413,9 @@ Tests:
     -1 -1 ratFixSign .s RatPosOne d= confirm
     1 -1 ratFixSign .s RatNegOne d= confirm
     RatPosMax ratFixSign .s 2147483647 1 d= confirm
-    RatNegMax ratFixSign .s -2147483648 1 d= confirm
+    RatNegMax ratFixSign .s -2147483647 1 d= confirm
     -2147483647 -1 ratFixSign .s RatPosMax d= confirm
-    2147483648 -1 ratFixSign .s RatNegMax d= confirm
+    2147483647 -1 ratFixSign .s RatNegMax d= confirm
     RatPosMin ratFixSign .s 1 2147483647 d= confirm
     RatNegMin ratFixSign .s -1 2147483647 d= confirm
     -1 -2147483647 ratFixSign .s RatPosMin d= confirm
@@ -436,7 +436,7 @@ Tests:
 	  num den s>d 2 sm/rem swap drop -   \ bias the numerator down den/2...
       else
 	  num den s>d 2 sm/rem swap drop + \ bias the numerator up den/2...
-      then
+      endif
       s>d den sm/rem swap drop ; \ then divide, dropping remainder
   #+end_src
 
@@ -461,7 +461,7 @@ Tests:
     RatPosOne rat>n .s 1 = confirm
     RatNegOne rat>n .s -1 = confirm
     ratPosMax rat>n .s 2147483647 = confirm
-    ratNegMax rat>n .s -2147483648 = confirm
+    ratNegMax rat>n .s -2147483647 = confirm
     ratPosMin rat>n .s 0= confirm
     ratNegMin rat>n .s 0= confirm
     1 2 rat>n .s 1 = confirm
@@ -484,7 +484,7 @@ Tests:
 	    2drop -0.0e0  \ handle -0e0 case
 	else
 	    swap s>f s>f f/  \ s>f moves ints to float stack, reversing order.
-	then ;
+	endif ;
   #+end_src
 
   Works for:
@@ -511,7 +511,7 @@ Tests:
     ratPosOne rat>f .s ." F: " f.s 1.0e0 f= confirm
     ratNegOne rat>f .s ." F: " f.s -1.0e0 f= confirm
     ratPosMax rat>f .s ." F: " f.s 2147483647.E0 f= confirm
-    ratNegMax rat>f .s ." F: " f.s -2147483648.E0 f= confirm
+    ratNegMax rat>f .s ." F: " f.s -2147483647.E0 f= confirm
     ratPosMin rat>f .s ." F: " f.s 4.6566128752E-10 f- fabs 1.e-11 f< confirm
     ratNegMin rat>f .s ." F: " f.s -4.6566128752E-10 f- fabs 1.e-11 f< confirm
     1 2 rat>f .s ." F: " f.s 0.5e0 f= confirm
@@ -536,9 +536,45 @@ Tests:
     3 -3 rat>f .s ." F: " f.s -1.e0 f= confirm
   #+end_src
 
+- 2rshift :: Right-shift 2 single unsigned ints by n
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    : 2rshift ( n1 n2 u -- n3 n4 ) \ rational "Rational logical right shift"
+	dup -rot ( n1 u n2 u )
+	2swap rshift ( n2 u n3 )
+	-rot rshift ; ( n3 n4 )
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    6 14 1 2rshift .s 3 7 d= confirm
+    12 28 2 2rshift .s 3 7 d= confirm
+    24 56 3 2rshift .s 3 7 d= confirm
+  #+end_src
+
+- ratTZshift :: Right-shift numerator and denominator to eliminate
+  any common trailing zeros.
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    : ratTZshift ( num1 den1 -- num2 den2 ) \ rational "Rational trailing-zero shift"
+	over CTZ ( num1 den1 ntz )
+	over CTZ ( num1 den1 ntz dtz )
+	min ( num1 den1 mintz )
+	2rshift ; ( num2 den2 )
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    6 14 ratTZshift .s 3 7 d= confirm
+    12 28 ratTZshift .s 3 7 d= confirm
+    24 56 ratTZshift .s 3 7 d= confirm
+  #+end_src
+  
+
 - e8f23>rat ::
-  Convert a normal float 8-bit exponent and 23-bit fraction to a
-  rational number. If out of rational range, return NaN (0/0).
+  Convert a normal IEEE float 8-bit exponent and (unsigned) 23-bit
+  fraction to a rational number.
+  If out of rational range, return max or min.
 
   #+begin_src forth :tangle rat-math-lib.fs
     : ex8f23>rat { ex8 f23 -- num den }
@@ -546,16 +582,43 @@ Tests:
 	\ ex8: 8 bit unsigned 0-255 IEEE float exponent, right justified
 	\ fr23 : 23-bit unsigned float fraction (sans implied 1 in bit 23)
 	\ Does not handle Zero, -Zero, +/- infinity or NaN.
-	\ Returns NaN (0/0) if out of rational range.
-	f23 $00800000 or  \ base 24-bit numerator
+	\ Returns RatPosMax if exponent too high
+	\ Returns RatPosMin if exponent too low
+	f23 $00800000 or  \ base 24-bit unsigned numerator
 	dup CTZ  \ trailing zeros is 0 to 23
-	$00800000  \ base 24-bit denominator
+	$00800000  \ base 24-bit unsigned denominator
 	ex8 127 -  \ 2^exp exponent
-	.s { n24 tz d24 exp }
-	exp if
-	
-	then
-	RatPosOne ;
+	{ n24 tz d24 exp }
+	exp if  \ non-zero exponent
+	    exp 0< if  \ is negative ?
+		\ shift denominator left <= 7 and numerator right <= tz
+		exp -7 tz - >= if  \ exp in (-7-tz)..-1 range?
+		    exp negate tz <= if \ -exp in 1..tz range?
+			n24 exp negate rshift d24  \ rshift n24 by -exp
+		    else
+			n24 tz rshift  \ rshift n24 by full tz, if any
+			d24 exp negate tz - lshift  \ and lshift d24 the rest
+		    endif
+		else
+		    RatPosMin
+		endif
+	    else \ is positive
+		\ shift numerator left <= 7 and denominator right <= 23
+		exp 30 <= if  \ exp in 1..30 range?
+		    exp 23 <= if \ exp in 1..23 range?
+			n24 d24 exp rshift  \ rshift d24 by exp
+		    else
+			n24 exp 23 - lshift  \ lshift n24 by exp-23
+			d24 23 rshift  \ and rshift d24 by 23
+		    endif
+		else
+		    RatPosMax
+		endif
+	    endif
+	else \ exp is zero. Use base n24 d24
+	    n24 d24
+	endif ( num den )
+	ratTZshift ;  \ eliminate any common trailing zeros
   #+end_src
 
 - f>rat “Float to Rational” ::
@@ -578,22 +641,22 @@ Tests:
 		    ratNegInf
 		else
 		    ratPosInf
-		then
-	    then
+		endif
+	    endif
 	else
 	    f32expo 0= f32frac 0= and if  \ expo = 0 and frac = 0
 		f32sign if  \ negative ?
 		    ratNegZero
 		else
 		    ratZero
-		then
+		endif
 	    else
 		f32expo f32frac ex8f23>rat  \ Convert  exponent and fraction to rational
 		f32sign if  \ is negative?
 		    swap negate swap
-		then  \ negate the numerator
-	    then
-	then ;
+		endif  \ negate the numerator
+	    endif
+	endif ;
   #+end_src
 
   Works for:
@@ -602,12 +665,12 @@ Tests:
   - [X] +Inf
   - [X] -Inf
   - [X] NaN
-  - [ ] +1
-  - [ ] -1
-  - [ ] +2147483647
-  - [ ] -2147483648
-  - [ ] +1/2147483647
-  - [ ] -1/2147483647
+  - [X] +1
+  - [X] -1
+  - [X] +2147483647
+  - [X] -2147483648
+  - [X] +1/2147483647
+  - [X] -1/2147483647
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
@@ -619,8 +682,53 @@ Tests:
     0.0e0 0.0e0  f/ f>rat .s RatNan d= confirm
     1.0e0 f>rat .s RatPosOne d= confirm
     -1.0e0 f>rat .s RatNegOne d= confirm
+    2.0e10 f>rat .s RatPosMax d= confirm
+    -2.0e10 f>rat .s RatNegMax d= confirm
+    2.0e-11 f>rat .s RatPosMin d= confirm
+    -2.0e-11 f>rat .s RatNegMin d= confirm
+    1.5e0 f>rat .s 3 2 d= confirm
+    -1.5e0 f>rat .s -3 2 d= confirm
+    1.75e0 f>rat .s 7 4 d= confirm
+    -1.75e0 f>rat .s -7 4 d= confirm
+    1.1e0 f>rat .s 9227469 8388608 d= confirm
+    -1.1e0 f>rat .s -9227469 8388608 d= confirm
+    2147483647.0e0 f>rat .s 2147483647 1 d= confirm
+    -2147483647.0e0 f>rat .s -2147483647 1 d= confirm
+    1.0e0 2147483647.0e0 f/ f>rat .s 1 2147483647 d= confirm
+    -1.0e0 2147483647.0e0 f/ f>rat .s -1 2147483647 d= confirm
+    2.0e0 f>rat .s 2 1 d= confirm
+    4.0e0 f>rat .s 4 1 d= confirm
+    8.0e0 f>rat .s 8 1 d= confirm
+    16.0e0 f>rat .s 16 1 d= confirm
+    32.0e0 f>rat .s 32 1 d= confirm
+    64.0e0 f>rat .s 64 1 d= confirm
+    128.0e0 f>rat .s 128 1 d= confirm
+    256.0e0 f>rat .s 256 1 d= confirm
+    512.0e0 f>rat .s 512 1 d= confirm
+    1024.0e0 f>rat .s 1024 1 d= confirm
+    2048.0e0 f>rat .s 2048 1 d= confirm
+    4096.0e0 f>rat .s 4096 1 d= confirm
+    8192.0e0 f>rat .s 8192 1 d= confirm
+    16384.0e0 f>rat .s 16384 1 d= confirm
+    32768.0e0 f>rat .s 32768 1 d= confirm
+    65536.0e0 f>rat .s 65536 1 d= confirm
+    131072.0e0 f>rat .s 131072 1 d= confirm
+    262144.0e0 f>rat .s 262144 1 d= confirm
+    524288.0e0 f>rat .s 524288 1 d= confirm
+    1048576.0e0 f>rat .s 1048576 1 d= confirm
+    2097152.0e0 f>rat .s 2097152 1 d= confirm
+    4194304.0e0 f>rat .s 4194304 1 d= confirm
+    8388608.0e0 f>rat .s 8388608 1 d= confirm
+    16777216.0e0 f>rat .s 16777216 1 d= confirm
+    33554432.0e0 f>rat .s 33554432 1 d= confirm
+    67108864.0e0 f>rat .s 67108864 1 d= confirm
+    134217728.0e0 f>rat .s 134217728 1 d= confirm
+    268435456.0e0 f>rat .s 268435456 1 d= confirm
+    536870912.0e0 f>rat .s 536870912 1 d= confirm
+    1073741824.0e0 f>rat .s 1073741824 1 d= confirm
+    2147483648.0e0 f>rat .s RatPosMax d= confirm
+    4294967296.0e0 f>rat .s RatPosMax d= confirm
   #+end_src
-
 
 - ratReduce “rat reduce” ::
   Reduce the fraction to an equivalent one with the lowest terms by
@@ -639,9 +747,9 @@ Tests:
 		    /  \ denom=denom/GCF ( -- num1 den1 )
 		else
 		    drop  \ drop GCF of 1
-		then
-	    then
-	then ;
+		endif
+	    endif
+	endif ;
   #+end_src
 
   Tests:  
