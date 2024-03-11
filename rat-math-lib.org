@@ -377,7 +377,7 @@ Tests:
   Ensure that the denominator is not negative when the numerator is non-zero.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : ratFixSign ( num den -- nNum denen ) \ rational “Rational Fix Sign”
+    : ratFixSign ( num1 den1 -- num2 den2 ) \ rational “Rational Fix Sign”
 	\ Ensure that the denominator is not negative when the numerator is non-zero.
 	dup 0<  \ denom < 0 ?
 	if over  \ numer <> 0 ?
@@ -736,18 +736,76 @@ Tests:
   factor, if the GCF is greater than one.
 
   #+begin_src forth :tangle rat-math-lib.fs
-    : ratReduce ( num den -- num1 den1 )
+    : ratReduce ( num1 den1 -- num2 den2 )
 	\ if both terms are non-zero and the GCF is > 1, reduce to lowest terms.
 	dup if  \ numer <> 0 ?
 	    over if  \ denom <> 0 ?
 		2dup GCF  \ find GCF (which is positive)
-		dup 1- if   \ GCF > 1 ? ( -- num den GCF )
-		    dup -rot ( -- num GCF den GCF )
-		    2swap / -rot  \ numer=numer/GCF ( -- num1 den GCF )
-		    /  \ denom=denom/GCF ( -- num1 den1 )
+		dup 1- if   \ GCF > 1 ? ( -- num1 den1 GCF )
+		    dup -rot ( -- num1 GCF den1 GCF )
+		    2swap / -rot  \ numer=numer/GCF ( -- num2 den1 GCF )
+		    /  \ denom=denom/GCF ( -- num2 den2 )
 		else
 		    drop  \ drop GCF of 1
 		endif
+	    endif
+	endif ;
+  #+end_src
+
+  Works for:
+  - [X] +0
+  - [X] -0
+  - [X] +Inf
+  - [X] -Inf
+  - [X] NaN
+  - [X] +1
+  - [X] -1
+  - [X] +2147483647
+  - [X] -2147483648
+  - [X] +1/2147483647
+  - [X] -1/2147483647
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    ratZero ratReduce .s ratZero d= confirm
+    ratNegZero ratReduce .s ratNegZero d= confirm
+    ratPosInf ratReduce .s ratPosInf d= confirm
+    ratNegInf ratReduce .s ratNegInf d= confirm
+    ratNaN ratReduce .s ratNaN d= confirm
+    ratPosOne ratReduce .s ratPosOne d= confirm
+    ratNegOne ratReduce .s ratNegOne d= confirm
+    ratPosMax ratReduce .s ratPosMax d= confirm
+    ratNegMax ratReduce .s ratNegMax d= confirm
+    ratPosMin ratReduce .s ratPosMin d= confirm
+    ratNegMin ratReduce .s ratNegMin d= confirm
+    123 123 ratReduce .s 1 1 d= confirm
+    18 123 ratReduce .s 6 41 d= confirm
+  #+end_src
+
+- ratNorm “rat normalize” ::
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    : ratNorm ( num1 den1 -- num2 den2 ) \ rational "Rational Normalize"
+	ratFixSign  \ Ensure non-negative den1)
+	dup if  \ "? 0<>" den non-zero
+	    over if  \ "0<> 0<>" normal
+		ratReduce  \ Reduce fraction by factoring GCF
+	    else  \ "0= 0<>" some zero
+		dup 0< if  \ "0= 0<" neg zero
+		    ratNegZero
+		else  \ "0= 0>" normal zero
+		    ratZero
+		endif
+	    endif
+	else  \ "? 0=" infinity or NaN
+	    over if  \ "0<> 0=" +/- Infinity
+		over 0< if  \ "0< 0=" -Infinity
+		    ratNegInf
+		else  \ "0> 0=" +Infinity
+		    ratPosInf
+		endif
+	    else  \ "0= 0=" NaN
+		ratNaN
 	    endif
 	endif ;
   #+end_src
@@ -756,16 +814,64 @@ Tests:
   #+begin_src forth :tangle rat-math-lib-tests.fs
   #+end_src
 
-- ratNormal “rat normalize” ::
+** Operations
+This section provides basic math operations and supporting words.
+
+- rat* “rat star” ::
+  This simply multiplies two rational numbers.
 
   #+begin_src forth :tangle rat-math-lib.fs
+    : rat* { numA denA numB denB } \ Multiply 2 rational numbers
+	numA numB *
+	denA denB * ;
   #+end_src
 
   Tests:  
   #+begin_src forth :tangle rat-math-lib-tests.fs
   #+end_src
 
-** Operations
+- rat1/ “rat invert” ::
+  This inverts a rational number.
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    ' swap Alias rat1/
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+  #+end_src
+
+- rat/ “rat slash” ::
+  This divides two rational numbers by inverting the second rational
+  number and then multiplying them.
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    : rat/ ( numA denA numB denB ) \ divide two rational numbers
+	rat1/ rat* ;
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+  #+end_src
+
+- ratComDen “rat Common Denoninator” :: 
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    : ratComDen { numA denA numB denB -- numC denC numD denD } \ Convert two ratios to use a common denominator
+	denA denB GCF { cf } \ remember the GCF of the denominators
+	numA denB cf */  \ get numC
+	denA denB cf */  \ get denC
+	numB denA cf */  \ get numD
+	over ;  \ get denD
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+    0 1 2 3 ratComDen .s 2 3 d= -rot 0 3 d= and confirm
+    1 2 3 4 ratComDen .s 3 4 d= -rot 2 4 d= and confirm
+    2 3 4 5 ratComDen .s 12 15 d= -rot 10 15 d= and confirm
+    3 4 5 6 ratComDen .s 10 12 d= -rot 9 12 d= and confirm
+  #+end_src
 
 - rat+ “rat plus” ::
 
@@ -795,24 +901,6 @@ Tests:
   #+end_src
 
 - rat1- “rat 1 minus” :: 
-
-  #+begin_src forth :tangle rat-math-lib.fs
-  #+end_src
-
-  Tests:  
-  #+begin_src forth :tangle rat-math-lib-tests.fs
-  #+end_src
-
-- rat* “rat star” ::
-
-  #+begin_src forth :tangle rat-math-lib.fs
-  #+end_src
-
-  Tests:  
-  #+begin_src forth :tangle rat-math-lib-tests.fs
-  #+end_src
-
-- rat/ “rat slash” ::
 
   #+begin_src forth :tangle rat-math-lib.fs
   #+end_src
