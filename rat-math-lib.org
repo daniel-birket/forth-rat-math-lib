@@ -876,33 +876,9 @@ This section provides basic math operations and supporting words.
 - rat+ “rat plus” ::
 
   #+begin_src forth :tangle rat-math-lib.fs
-  #+end_src
-
-  Tests:  
-  #+begin_src forth :tangle rat-math-lib-tests.fs
-  #+end_src
-
-- rat1+ “rat one plus” :: 
-
-  #+begin_src forth :tangle rat-math-lib.fs
-  #+end_src
-
-  Tests:  
-  #+begin_src forth :tangle rat-math-lib-tests.fs
-  #+end_src
-
-- rat- “rat minus” ::
-
-  #+begin_src forth :tangle rat-math-lib.fs
-  #+end_src
-
-  Tests:  
-  #+begin_src forth :tangle rat-math-lib-tests.fs
-  #+end_src
-
-- rat1- “rat 1 minus” :: 
-
-  #+begin_src forth :tangle rat-math-lib.fs
+    : rat+ ( numA denA numB denB -- numC denC ) \ rational "Rat Plus"
+	ratComDen { numA denA numB denB } \ make denominators common
+	numA numB + denA ;  \ Add numerators and use either denominator
   #+end_src
 
   Tests:  
@@ -912,6 +888,41 @@ This section provides basic math operations and supporting words.
 - ratNegate “rat negate” ::
 
   #+begin_src forth :tangle rat-math-lib.fs
+    : ratNegate ( num1 den1 -- num2 den2 ) \ negate a rational number
+	swap negate swap ;  \ Negate the numerator and replace it.
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+  #+end_src
+
+- rat- “rat minus” ::
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    : rat- ( numA denA numB denB -- numC den C ) \ subtract ratioA - ratioB
+	ratNegate rat+ ;  \ Subtract by negating ratioB and adding.
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+  #+end_src
+
+- rat1+ “rat one plus” :: 
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    : rat1+ ( num1 den1 -- num2 den2 ) \ add one to a ratio
+	tuck + swap ;  \ Add den1 to num1 and replace it
+  #+end_src
+
+  Tests:  
+  #+begin_src forth :tangle rat-math-lib-tests.fs
+  #+end_src
+
+- rat1- “rat 1 minus” :: 
+
+  #+begin_src forth :tangle rat-math-lib.fs
+    : rat1- ( num1 den1 -- num2 den2 )  \ subtract 1 from a ration
+	tuck - swap ;  \ Subtract den1 from num1 and replace it.
   #+end_src
 
   Tests:  
