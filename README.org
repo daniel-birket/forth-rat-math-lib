@@ -31,15 +31,15 @@ integer in the denominator.
 There is an inherent trade-off between precision and range. Precision
 and range vary inversely to each other depending on the size of the
 denominator. If the denominator is at the minimum, 1, the range is the
-entire double-precision integer range (-2,147,483,648 to
+entire single-precision integer range (-2,147,483,648 to
 2,147,483,647) but there is only integer precision. If the denominator
-is 1000, there is 0.001 precision, but 1/1000 of the double-precision
+is 1000, there is 0.001 precision, but 1/1000 of the single-precision
 integer range (-2,147,483 to 2.147,483). When the denominator is at
 its maximum, precision is very high and the range is reduced to -1
 to 1.
 
-I realize that the limited range may be a concern for some uses, but
+I realize that the limited range may be a concern for some applications, but
 no more than the numerical limitations of other types. I have good
 intentions of creating a double-precision rational number library, but
-as this is my first significant project in Forth, I will do the easier
+as this is my first significant project in Forth, I will attempt the easier
 single-precision case for now.
