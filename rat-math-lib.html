@@ -1,0 +1,1806 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2024-07-05 Fri 16:41 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rational Math Library for Forth</title>
+<meta name="author" content="Daniel Birket" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">Rational Math Library for Forth
+<br />
+<span class="subtitle">Literate Design</span>
+</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org17071b6">1. Introduction</a></li>
+<li><a href="#orgf85494c">2. Words</a>
+<ul>
+<li><a href="#orgbc7cd31">2.1. Helpers</a>
+<ul>
+<li><a href="#org4c1e69f">2.1.1. GCF “Greatest Common Factor”</a></li>
+<li><a href="#org38c7bef">2.1.2. LCM “Least Common Multiple”</a></li>
+<li><a href="#orgf480086">2.1.3. CTZ “Count Trailing Zeros”</a></li>
+</ul>
+</li>
+<li><a href="#orgacba88a">2.2. Variables and Constants</a>
+<ul>
+<li><a href="#org495f2af">2.2.1. ratConstant</a></li>
+<li><a href="#orgc3e3964">2.2.2. Useful constants</a></li>
+<li><a href="#org5511b7d">2.2.3. ratVariable</a></li>
+<li><a href="#orgc48552b">2.2.4. rat@ “rat fetch”</a></li>
+<li><a href="#org73fca6a">2.2.5. rat! “rat store”</a></li>
+</ul>
+</li>
+<li><a href="#orga5fdd93">2.3. Conversions</a>
+<ul>
+<li><a href="#org106af4a">2.3.1. n&gt;rat “n to rat”</a></li>
+<li><a href="#org546f4c4">2.3.2. 1/n&gt;rat “inverse n to rat”</a></li>
+<li><a href="#org72e2c64">2.3.3. ratFixSign “rat fix sign”</a></li>
+<li><a href="#org62d7973">2.3.4. rat&gt;n</a></li>
+<li><a href="#orga244cfb">2.3.5. rat&gt;f</a></li>
+<li><a href="#org3222a6c">2.3.6. 2rshift</a></li>
+<li><a href="#org5472e7e">2.3.7. ratTZshift</a></li>
+<li><a href="#org6c05bd6">2.3.8. e8f23&gt;rat</a></li>
+<li><a href="#org812355f">2.3.9. f&gt;rat “Float to Rational”</a></li>
+<li><a href="#org8c4021f">2.3.10. ratReduce</a></li>
+<li><a href="#org4550cbf">2.3.11. ratNorm</a></li>
+<li><a href="#org2eff145">2.3.12. ratMediant "Compute the Mediant"</a></li>
+<li><a href="#org5f74010">2.3.13. f&gt;ratApprox "Convert float to an approximate rational."</a></li>
+</ul>
+</li>
+<li><a href="#orgf7679c1">2.4. Operations</a>
+<ul>
+<li><a href="#org9cb0d58">2.4.1. rat* “rat star”</a></li>
+<li><a href="#orge9d3c7c">2.4.2. rat1/ “rat invert”</a></li>
+<li><a href="#org2d28175">2.4.3. rat/ “rat slash”</a></li>
+<li><a href="#org3f1cc1b">2.4.4. ratComDen “rat Common Denominator”</a></li>
+<li><a href="#orgc0cd714">2.4.5. rat+ “rat plus”</a></li>
+<li><a href="#orgd2bfe37">2.4.6. ratNegate “rat negate”</a></li>
+<li><a href="#orgedb4a06">2.4.7. rat- “rat minus”</a></li>
+<li><a href="#org4757855">2.4.8. rat1+ “rat one plus”</a></li>
+<li><a href="#orgde884dd">2.4.9. rat1- “rat 1 minus”</a></li>
+<li><a href="#org691867d">2.4.10. ratAbs “rat abs”</a></li>
+</ul>
+</li>
+<li><a href="#org3b92b58">2.5. Comparisons</a>
+<ul>
+<li><a href="#org0066d4b">2.5.1. rat=0 "rat equals 0"</a></li>
+<li><a href="#org01a7524">2.5.2. rat&lt;0 "rat is less than 0"</a></li>
+<li><a href="#orgc64c7be">2.5.3. rat= “rat-equals”</a></li>
+<li><a href="#org0ff1fea">2.5.4. rat&lt; "rat less than"</a></li>
+<li><a href="#org6c115ef">2.5.5. rat&lt;= "rat less than or equals"</a></li>
+<li><a href="#orga84e1d5">2.5.6. rat&gt; "rat greater than"</a></li>
+<li><a href="#org2628a1c">2.5.7. rat&gt;= "rat greater than or equals"</a></li>
+<li><a href="#orgbb96e2c">2.5.8. ratMin “rat min”</a></li>
+<li><a href="#orgd0f5c36">2.5.9. ratMax “rat max”</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+Open this "literate programming" .org file in emacs org-mode.  You can
+'tangle' the output .fs files by typing ^c-^v-^t or run
+org-babel-tangle after typing Alt-x.  You may output this file to
+various formats (to print) by typing ^c-^e and selecting a format
+with the menu.
+</p>
+
+<div id="outline-container-org17071b6" class="outline-2">
+<h2 id="org17071b6"><span class="section-number-2">1.</span> Introduction</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Rational numbers (i.e. “fractions”) are entered in FORTH as an integer
+numerator followed by an integer denominator.  Both are
+single-precision signed integers.  For example 0/1 (zero) is entered
+as “0 1”.  Forty-one Sevenths (41/7) is entered as “41 7”.  Negative
+three halves (-3/2) is entered as “-3 2”.  Fractions appear on the
+stack as two cells: the numerator and then the denominator on “top”.
+</p>
+
+<p>
+A zero denominator with any non-zero integer numerator indicates
+positive or negative infinity. A zero numerator with a positive or
+negative denominator indicates positive or negative zero.  A zero
+numerator and zero denominator indicates not-a-number (NaN).
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">numer</th>
+<th scope="col" class="org-left">denom</th>
+<th scope="col" class="org-left">meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">+</td>
+<td class="org-left">+</td>
+<td class="org-left">+ fraction</td>
+</tr>
+
+<tr>
+<td class="org-left">-</td>
+<td class="org-left">+</td>
+<td class="org-left">- fraction</td>
+</tr>
+
+<tr>
+<td class="org-left">+</td>
+<td class="org-left">-</td>
+<td class="org-left">- fraction</td>
+</tr>
+
+<tr>
+<td class="org-left">-</td>
+<td class="org-left">-</td>
+<td class="org-left">+ fraction</td>
+</tr>
+
+<tr>
+<td class="org-left">0</td>
+<td class="org-left">+</td>
+<td class="org-left">0 or +0</td>
+</tr>
+
+<tr>
+<td class="org-left">0</td>
+<td class="org-left">-</td>
+<td class="org-left">-0</td>
+</tr>
+
+<tr>
+<td class="org-left">+</td>
+<td class="org-left">0</td>
+<td class="org-left">+ infinity</td>
+</tr>
+
+<tr>
+<td class="org-left">-</td>
+<td class="org-left">0</td>
+<td class="org-left">- infinity</td>
+</tr>
+
+<tr>
+<td class="org-left">0</td>
+<td class="org-left">0</td>
+<td class="org-left">NaN not-a-number</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Fractions can be “reduced” (See ratReduce) to remove common factors of
+the numerator and denominator but that is not required or automatic.
+For example, a fraction of “3 9” (3/9) is fine.  You don’t have to
+reduce that fraction to “1 3” (1/3), although you can.  Reduced
+fractions have more range than fractions containing unnecessary common
+factors.
+</p>
+
+<p>
+The denominator is positive when normalized but may be negative. When
+negative, it negates the fraction.  If both the numerator and
+denominator are negative, the fraction is positive.
+</p>
+
+<p>
+The file rat-math-lib.fs contains the rational math library:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">\ Notation:
+\ num : single-precision signed integer numerator
+\ den : single-precision signed integer denominator
+\ "name" : name from input stream (not stack)
+\ a-addr : address, perhaps from a variable
+</pre>
+</div>
+
+<p>
+The file rat-math-lib-tests.fs contains the test suite for the library:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">\ ----------------------------------------------------------------
+\ Test Suite for rat-math-lib.fs
+: confirm if ." Pass " else ." Fail " bye endif ;  \ immediate assert( )
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgf85494c" class="outline-2">
+<h2 id="orgf85494c"><span class="section-number-2">2.</span> Words</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+This section describes and defines the Forth “words” (functions) used
+in the library. Most words are prefixed with “rat”.
+</p>
+</div>
+
+<div id="outline-container-orgbc7cd31" class="outline-3">
+<h3 id="orgbc7cd31"><span class="section-number-3">2.1.</span> Helpers</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+These generally useful functions are used by some “rat” functions below.
+</p>
+</div>
+
+<div id="outline-container-org4c1e69f" class="outline-4">
+<h4 id="org4c1e69f"><span class="section-number-4">2.1.1.</span> GCF “Greatest Common Factor”</h4>
+<div class="outline-text-4" id="text-2-1-1">
+<p>
+Find the positive greatest common factor of two signed non-zero integers.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: GCF ( n1 n2 -- n ) \ rational "Greatest Common Factor"
+    \ Return the positive signed integer greatest common factor
+    \ of 2 signed non-0 ints
+    begin
+        ?dup while
+            tuck mod  \ mod naturally swaps n1 n2 when n1 &lt; n2
+    repeat
+    abs ;
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">.s  \ &lt;0&gt; =
+0 0 GCF .s 0= confirm  \ input error
+1 0 GCF .s 1 = confirm  \ exit case
+0 1 GCF .s 1 = confirm  \ rev exit
+2 1 GCF .s 1 = confirm  \ n1 &gt; n2
+1 2 GCF .s 1 = confirm  \ n1 &lt; n2
+1 1 GCF .s 1 = confirm
+-1 1 GCF .s 1 = confirm
+1 -1 GCF .s 1 = confirm
+-1 -1 GCF .s 1 = confirm
+2 2 GCF .s 2 = confirm  \ n1 = n2
+-2 2 GCF .s 2 = confirm  \ -n1 = n2
+2 -2 GCF .s 2 = confirm  \ n1 = -n2
+2 4 GCF .s 2 = confirm
+4 2 GCF .s 2 = confirm
+-2 4 GCF .s 2 = confirm
+4 -2 GCF .s 2 = confirm
+2 -4 GCF .s 2 = confirm
+-4 2 GCF .s 2 = confirm
+65536 256 GCF .s 256 = confirm
+65537 257 GCF .s 1 = confirm
+2147483645 6289 GCF .s 19 = confirm
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org38c7bef" class="outline-4">
+<h4 id="org38c7bef"><span class="section-number-4">2.1.2.</span> LCM “Least Common Multiple”</h4>
+<div class="outline-text-4" id="text-2-1-2">
+<p>
+Find the positive least common multiple of two signed non-zero
+integers. If either input is zero, making GCF 0, return 0.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: LCM ( n1 n2 -- n ) \ rational "Least Common Multiple"
+    \ Return the positive signed integer least common multiple
+    \ of two signed non-zero integers.
+    2dup GCF
+    dup if  \ if GCF &lt;&gt; 0
+        */ abs
+    else
+        drop 2drop 0  \ error: cleanup, return 0
+    endif ;
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">.s  \ &lt;0&gt; =
+0 0 LCM .s 0= confirm  \ input error
+1 0 LCM .s 0= confirm  \ GCD exit case
+0 1 LCM .s 0= confirm  \ GCD rev exit case
+2 1 LCM .s 2 = confirm
+1 2 LCM .s 2 = confirm
+1 1 LCM .s 1 = confirm
+1 -1 LCM .s 1 = confirm
+-1 1 LCM .s 1 = confirm
+65537 257 LCM .s 16843009 = confirm
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgf480086" class="outline-4">
+<h4 id="orgf480086"><span class="section-number-4">2.1.3.</span> CTZ “Count Trailing Zeros”</h4>
+<div class="outline-text-4" id="text-2-1-3">
+<p>
+Count trailing zeros. (see <a href="https://en.wikipedia.org/wiki/Find_first_set">Find First Set</a>). Given a 32-bit positive
+signed integer (0 sign bit), count the number of trailing zero bits.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-right" />
+
+<col  class="org-right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">given</th>
+<th scope="col" class="org-right">returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1</td>
+<td class="org-right">0</td>
+</tr>
+
+<tr>
+<td class="org-right">0xxxxxxxxxxxxxxxxxxxxxxxxxxxxx10</td>
+<td class="org-right">1</td>
+</tr>
+
+<tr>
+<td class="org-right">0xxxxxxxxxxxxxxxxxxxxxxxxxxxx100</td>
+<td class="org-right">2</td>
+</tr>
+
+<tr>
+<td class="org-right">0x100000000000000000000000000000</td>
+<td class="org-right">29</td>
+</tr>
+
+<tr>
+<td class="org-right">01000000000000000000000000000000</td>
+<td class="org-right">30</td>
+</tr>
+
+<tr>
+<td class="org-right">10000000000000000000000000000000</td>
+<td class="org-right">31</td>
+</tr>
+
+<tr>
+<td class="org-right">00000000000000000000000000000000</td>
+<td class="org-right">32</td>
+</tr>
+</tbody>
+</table>
+
+<div class="org-src-container">
+<pre class="src src-forth">: CTZ ( w -- u ) \ rational "Count Trailing Zeros"
+    \  Count trailing zero bits of an single integer, returning int
+    dup negate and  \ isolate trailing 1-bit
+    32 swap  \ initialize count to 32
+    dup if swap 1- swap endif
+    dup $0000FFFF and if swap 16 - swap endif
+    dup $00FF00FF and if swap 8 - swap endif
+    dup $0F0F0F0F and if swap 4 - swap endif
+    dup $33333333 and if swap 2 - swap endif
+    dup $55555555 and if swap 1- swap endif
+    drop ;  \ drop the input
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">.s  \ &lt;0&gt; =
+0 CTZ .s 32 = confirm
+$80000000 CTZ .s 31 = confirm
+$40000000 CTZ .s 30 = confirm
+$60000000 CTZ .s 29 = confirm
+$70000000 CTZ .s 28 = confirm
+1 CTZ .s 0= confirm
+2 CTZ .s 1 = confirm
+12 CTZ .s 2 = confirm
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgacba88a" class="outline-3">
+<h3 id="orgacba88a"><span class="section-number-3">2.2.</span> Variables and Constants</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+This section defines words that define variables and constants.
+</p>
+</div>
+
+<div id="outline-container-org495f2af" class="outline-4">
+<h4 id="org495f2af"><span class="section-number-4">2.2.1.</span> ratConstant</h4>
+<div class="outline-text-4" id="text-2-2-1">
+<p>
+Allocate and initialize a 2-cell rational constant from the stack.
+</p>
+
+<p>
+The name of the new constant subsequently returns the value of the
+constant.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: ratConstant ( num den "name" -- ) \ rational "rat-constant"
+    \ Allocate and initialize a rational constant word
+    create 2,
+  does&gt; ( -- num den )
+    2@ ;
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc3e3964" class="outline-4">
+<h4 id="orgc3e3964"><span class="section-number-4">2.2.2.</span> Useful constants</h4>
+<div class="outline-text-4" id="text-2-2-2">
+<p>
+Define several useful constants
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">0 1 ratConstant ratZero  \ Zero or Positive Zero
+0 -1 ratConstant ratNegZero  \ Negative Zero
+1 0 ratConstant ratPosInf  \ Positive Infinity
+-1 0 ratConstant ratNegInf  \ Negative Infinity
+0 0 ratConstant ratNaN  \ Not-a-Number
+1 1 ratConstant ratPosOne  \ +1
+-1 1 ratConstant ratNegOne  \ -1
+2147483647 1 ratConstant ratPosMax  \ Positive Max
+-2147483647 1 ratConstant ratNegMax  \ Negative Max
+1 2147483647 ratConstant ratPosMin  \ Positive Min
+-1 2147483647 ratConstant ratNegMin  \ Negative Min
+355 113 ratConstant ratPi6  \ pi to 6 decimal places
+104348 33215 ratConstant ratPi9  \ pi to 9 decimal places
+1264 465 ratConstant ratE6  \ e to 6 decimal places
+23225 8544 ratConstant ratE9  \ e to 9 decimal places
+</pre>
+</div>
+
+<p>
+Works for:
+</p>
+<ul class="org-ul">
+<li class="on"><code>[X]</code> +0</li>
+<li class="on"><code>[X]</code> -0</li>
+<li class="on"><code>[X]</code> +Inf</li>
+<li class="on"><code>[X]</code> -Inf</li>
+<li class="on"><code>[X]</code> NaN</li>
+<li class="on"><code>[X]</code> +1</li>
+<li class="on"><code>[X]</code> -1</li>
+<li class="on"><code>[X]</code> +2147483647</li>
+<li class="on"><code>[X]</code> -2147483648</li>
+<li class="on"><code>[X]</code> +1/2147483647</li>
+<li class="on"><code>[X]</code> -1/2147483647</li>
+</ul>
+
+<p>
+Tests:
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">.s  \ &lt;0&gt; =
+ratZero .s 2drop  \ &lt;2&gt; 0 1 =
+ratNegZero .s 2drop  \ &lt;2&gt; 0 -1 =
+ratPosInf .s 2drop  \ &lt;2&gt; 1 0 =
+ratNegInf .s 2drop  \ &lt;2&gt; -1 0 =
+ratNaN .s 2drop  \ &lt;2&gt; 0 0 =
+ratPosOne .s 2drop  \ &lt;2&gt; 1 1 =
+ratNegOne .s 2drop  \ &lt;2&gt; -1 1 =
+ratPosMax .s 2drop  \ &lt;2&gt; 2147483647 1 =
+ratNegMax .s 2drop  \ &lt;2&gt; -2147483648 1 =
+ratPosMin .s 2drop  \ &lt;2&gt; 1 2147483647 =
+ratNegMin .s 2drop  \ &lt;2&gt; -1 2147483647 =
+ratPi6 .s 2drop  \ &lt;2&gt; 355 113 =
+ratPi9 .s 2drop  \ &lt;2&gt; 104348 33215 =
+ratE6 .s 2drop  \ &lt;2&gt; 1264 465 =
+ratE9 .s 2drop  \ &lt;2&gt; 23225 8544 =
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5511b7d" class="outline-4">
+<h4 id="org5511b7d"><span class="section-number-4">2.2.3.</span> ratVariable</h4>
+<div class="outline-text-4" id="text-2-2-3">
+<p>
+Allocates a 2-cell rational variable to store one single signed integer
+numerator and one single signed integer denominator.  The variable
+is initialized to zero, with a numerator of 0 and a denominator of 1.
+</p>
+
+<p>
+The name of the new variable subsequently returns the address of the
+variable.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: ratVariable ( “name” -- a-addr ) \ rational "rat-variable"
+  \ Allocate and initialize a rational variable to zero.
+  create RatZero 2, ;  \ Initialize to rational 0/1
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc48552b" class="outline-4">
+<h4 id="orgc48552b"><span class="section-number-4">2.2.4.</span> rat@ “rat fetch”</h4>
+<div class="outline-text-4" id="text-2-2-4">
+<p>
+Fetch a rational variable from the given address and return it as
+numerator, then denominator.
+</p>
+
+<p>
+When rational numbers are fetched from a variable to the stack, the
+denominator is fetched from the cell at the given address, followed
+by the numerator from the next cell.
+</p>
+
+<p>
+“rat@” is an alias of  “2@”.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">\ : rat@ ( -- num den ) \ rational "rat-fetch"
+\ rat@ is identical to 2@
+' 2@ Alias rat@
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org73fca6a" class="outline-4">
+<h4 id="org73fca6a"><span class="section-number-4">2.2.5.</span> rat! “rat store”</h4>
+<div class="outline-text-4" id="text-2-2-5">
+<p>
+Store a rational number at the given address.
+</p>
+
+<p>
+When rational numbers are stored from the stack to an address
+(usually of a variable), the denominator is stored in the cell at
+the given address and the numerator is stored in the next cell.
+</p>
+
+<p>
+“rat!” is an alias of “2!”.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">\ : rat! ( num den -- ) \ rational "rat-store"
+\ rat! is identical to 2!
+' 2! Alias rat!
+</pre>
+</div>
+
+<p>
+Tests:
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">.s  \ &lt;0&gt; =
+ratVariable rx .s
+rx .s
+rat@ .s 0 1 d= confirm
+-2 3 rx rat! .s
+rx rat@ .s -2 3 d= confirm
+-2147483648 2147483647 rx rat! .s
+rx rat@ .s -2147483648 2147483647 d= confirm
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orga5fdd93" class="outline-3">
+<h3 id="orga5fdd93"><span class="section-number-3">2.3.</span> Conversions</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+This section defines words to perform conversions.
+</p>
+</div>
+
+<div id="outline-container-org106af4a" class="outline-4">
+<h4 id="org106af4a"><span class="section-number-4">2.3.1.</span> n&gt;rat “n to rat”</h4>
+<div class="outline-text-4" id="text-2-3-1">
+<p>
+Convert single signed integer to rational by appending a denominator
+of 1.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: n&gt;rat ( num -- num 1 ) \ rational "int to rational"
+    \ Convert a single signed integer to rational
+    1 ;
+</pre>
+</div>
+
+<p>
+Works for:
+</p>
+<ul class="org-ul">
+<li class="on"><code>[X]</code> +0</li>
+<li class="trans"><code>[-]</code> -0</li>
+<li class="trans"><code>[-]</code> +Inf</li>
+<li class="trans"><code>[-]</code> -Inf</li>
+<li class="trans"><code>[-]</code> NaN</li>
+<li class="on"><code>[X]</code> +1</li>
+<li class="on"><code>[X]</code> -1</li>
+<li class="on"><code>[X]</code> +2147483647</li>
+<li class="on"><code>[X]</code> -2147483648</li>
+<li class="trans"><code>[-]</code> +1/2147483647</li>
+<li class="trans"><code>[-]</code> -1/2147483647</li>
+</ul>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">.s  \ &lt;0&gt; =
+0 n&gt;rat .s 0 1 d= confirm
+1 n&gt;rat .s 1 1 d= confirm
+-1 n&gt;rat .s -1 1 d= confirm
+2147483647 n&gt;rat .s 2147483647 1 d= confirm
+-2147483647 n&gt;rat .s -2147483647 1 d= confirm
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org546f4c4" class="outline-4">
+<h4 id="org546f4c4"><span class="section-number-4">2.3.2.</span> 1/n&gt;rat “inverse n to rat”</h4>
+<div class="outline-text-4" id="text-2-3-2">
+<p>
+Invert a single signed integer, converting to rational by pre-pending
+a numerator of 1.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: 1/n&gt;rat ( n -- 1 den ) \ rational "inverse int to rational"
+    \ Invert a single signed integer, converting to rational
+    1 swap ;
+</pre>
+</div>
+
+<p>
+Works for:
+</p>
+<ul class="org-ul">
+<li class="trans"><code>[-]</code> +0</li>
+<li class="trans"><code>[-]</code> -0</li>
+<li class="on"><code>[X]</code> +Inf</li>
+<li class="trans"><code>[-]</code> -Inf</li>
+<li class="trans"><code>[-]</code> NaN</li>
+<li class="on"><code>[X]</code> +1</li>
+<li class="on"><code>[X]</code> -1</li>
+<li class="trans"><code>[-]</code> +2147483647</li>
+<li class="trans"><code>[-]</code> -2147483648</li>
+<li class="on"><code>[X]</code> +1/2147483647</li>
+<li class="on"><code>[X]</code> -1/2147483647</li>
+</ul>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">.s  \ &lt;0&gt; =
+0 1/n&gt;rat .s 1 0 d= confirm
+1 1/n&gt;rat .s 1 1 d= confirm
+-1 1/n&gt;rat .s 1 -1 d= confirm
+2147483647 1/n&gt;rat .s 1 2147483647 d= confirm
+-2147483647 1/n&gt;rat .s 1 -2147483647 d= confirm
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org72e2c64" class="outline-4">
+<h4 id="org72e2c64"><span class="section-number-4">2.3.3.</span> ratFixSign “rat fix sign”</h4>
+<div class="outline-text-4" id="text-2-3-3">
+<p>
+Ensure that the denominator is not negative when the numerator is non-zero.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: ratFixSign ( num1 den1 -- num2 den2 ) \ rational “Rational Fix Sign”
+    \ Ensure that the denominator is not negative when the numerator is non-zero.
+    dup 0&lt; if \ denom &lt; 0 ?
+        over if \ numer &lt;&gt; 0 ?
+            swap negate swap  \ negate numer
+            negate  \ negate denom
+        endif
+    endif ;
+</pre>
+</div>
+
+<p>
+Works for:
+</p>
+<ul class="org-ul">
+<li class="on"><code>[X]</code> +0</li>
+<li class="on"><code>[X]</code> -0</li>
+<li class="on"><code>[X]</code> +Inf</li>
+<li class="on"><code>[X]</code> -Inf</li>
+<li class="on"><code>[X]</code> NaN</li>
+<li class="on"><code>[X]</code> +1</li>
+<li class="on"><code>[X]</code> -1</li>
+<li class="on"><code>[X]</code> +2147483647</li>
+<li class="on"><code>[X]</code> -2147483648</li>
+<li class="on"><code>[X]</code> +1/2147483647</li>
+<li class="on"><code>[X]</code> -1/2147483647</li>
+</ul>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">.s  \ &lt;0&gt; =
+RatZero ratFixSign .s 0 1 d= confirm
+RatNegZero ratFixSign .s 0 -1 d= confirm
+RatPosInf ratFixSign .s 1 0 d= confirm
+RatNegInf ratFixSign .s -1 0 d= confirm
+RatNaN ratFixSign .s 0 0 d= confirm
+RatPosOne ratFixSign .s 1 1 d= confirm
+RatNegOne ratFixSign .s -1 1 d= confirm
+-1 -1 ratFixSign .s RatPosOne d= confirm
+1 -1 ratFixSign .s RatNegOne d= confirm
+RatPosMax ratFixSign .s 2147483647 1 d= confirm
+RatNegMax ratFixSign .s -2147483647 1 d= confirm
+-2147483647 -1 ratFixSign .s RatPosMax d= confirm
+2147483647 -1 ratFixSign .s RatNegMax d= confirm
+RatPosMin ratFixSign .s 1 2147483647 d= confirm
+RatNegMin ratFixSign .s -1 2147483647 d= confirm
+-1 -2147483647 ratFixSign .s RatPosMin d= confirm
+1 -2147483647  ratFixSign .s RatNegMin d= confirm
+2 3 ratFixSign .s 2 3 d= confirm
+-2 3 ratFixSign .s -2 3 d= confirm
+-2 -3 ratFixSign .s 2 3 d= confirm
+2 -3 ratFixSign .s -2 3 d= confirm
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org62d7973" class="outline-4">
+<h4 id="org62d7973"><span class="section-number-4">2.3.4.</span> rat&gt;n</h4>
+<div class="outline-text-4" id="text-2-3-4">
+<p>
+Convert a rational number to single precision signed integer, rounding
+to the closest integer. Use “/” instead to truncate toward -infinity.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: rat&gt;n { num den -- n } \ rational "Rational to integer"
+  num 0&lt; den 0&lt; xor if \ if the signs of numerator and denominator are opposite
+      num den s&gt;d 2 sm/rem swap drop -   \ bias the numerator down den/2...
+  else
+      num den s&gt;d 2 sm/rem swap drop + \ bias the numerator up den/2...
+  endif
+  s&gt;d den sm/rem swap drop ; \ then divide, dropping remainder
+</pre>
+</div>
+
+<p>
+Works for:
+</p>
+<ul class="org-ul">
+<li class="on"><code>[X]</code> +0</li>
+<li class="on"><code>[X]</code> -0</li>
+<li class="off"><code>[&#xa0;]</code> +Inf</li>
+<li class="off"><code>[&#xa0;]</code> -Inf</li>
+<li class="off"><code>[&#xa0;]</code> NaN</li>
+<li class="on"><code>[X]</code> +1</li>
+<li class="on"><code>[X]</code> -1</li>
+<li class="on"><code>[X]</code> +2147483647</li>
+<li class="on"><code>[X]</code> -2147483648</li>
+<li class="on"><code>[X]</code> +1/2147483647</li>
+<li class="on"><code>[X]</code> -1/2147483647</li>
+</ul>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth"> .s  \ &lt;0&gt; =
+ RatZero rat&gt;n .s 0= confirm
+ RatNegZero rat&gt;n .s 0= confirm
+ RatPosOne rat&gt;n .s 1 = confirm
+ RatNegOne rat&gt;n .s -1 = confirm
+ ratPosMax rat&gt;n .s 2147483647 = confirm
+ ratNegMax rat&gt;n .s -2147483647 = confirm
+ ratPosMin rat&gt;n .s 0= confirm
+ ratNegMin rat&gt;n .s 0= confirm
+ 1 2 rat&gt;n .s 1 = confirm
+ -1 2 rat&gt;n .s -1 = confirm
+-1 -2 rat&gt;n .s 1 = confirm
+ 1 -2 rat&gt;n .s -1 = confirm
+ 1 3 rat&gt;n .s 0= confirm
+ -1 3 rat&gt;n .s 0= confirm
+ -1 -3 rat&gt;n .s 0= confirm
+ 1 -3 rat&gt;n .s 0= confirm
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orga244cfb" class="outline-4">
+<h4 id="orga244cfb"><span class="section-number-4">2.3.5.</span> rat&gt;f</h4>
+<div class="outline-text-4" id="text-2-3-5">
+<p>
+Convert a rational number to floating point.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: rat&gt;f ( num den -- ) ( F: -- f ) \ rational "Rational to Float"
+    \ Convert a rational number to floating point
+    2dup 0&lt; swap 0= and if  \ is 0/neg aka -0
+        2drop -0.0e0  \ handle -0e0 case
+    else
+        swap s&gt;f s&gt;f f/  \ s&gt;f moves ints to float stack, reversing order.
+    endif ;
+</pre>
+</div>
+
+<p>
+Works for:
+</p>
+<ul class="org-ul">
+<li class="on"><code>[X]</code> +0</li>
+<li class="off"><code>[&#xa0;]</code> -0</li>
+<li class="on"><code>[X]</code> +Inf</li>
+<li class="on"><code>[X]</code> -Inf</li>
+<li class="on"><code>[X]</code> NaN</li>
+<li class="on"><code>[X]</code> +1</li>
+<li class="on"><code>[X]</code> -1</li>
+<li class="on"><code>[X]</code> +2147483647</li>
+<li class="on"><code>[X]</code> -2147483648</li>
+<li class="on"><code>[X]</code> +1/2147483647</li>
+<li class="on"><code>[X]</code> -1/2147483647</li>
+</ul>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">.s ." F: " f.s  \ &lt;0&gt; F: &lt;0&gt; =
+ratZero rat&gt;f .s ." F: " f.s 0.0e0 f= confirm
+ratNegZero rat&gt;f .s ." F: " f.s f&gt;rat .s ." F: " f.s ratNegZero d= confirm
+ratPosInf rat&gt;f .s ." F: " f.s f&gt;rat .s ." F: " f.s ratPosInf d= confirm
+ratNegInf rat&gt;f .s ." F: " f.s f&gt;rat .s ." F: " f.s ratNegInf d= confirm
+ratNaN rat&gt;f .s ." F: " f.s f&gt;rat .s ." F: " f.s ratNaN d= confirm
+ratPosOne rat&gt;f .s ." F: " f.s 1.0e0 f= confirm
+ratNegOne rat&gt;f .s ." F: " f.s -1.0e0 f= confirm
+ratPosMax rat&gt;f .s ." F: " f.s 2147483647.E0 f= confirm
+ratNegMax rat&gt;f .s ." F: " f.s -2147483647.E0 f= confirm
+ratPosMin rat&gt;f .s ." F: " f.s 4.6566128752E-10 f- fabs 1.e-11 f&lt; confirm
+ratNegMin rat&gt;f .s ." F: " f.s -4.6566128752E-10 f- fabs 1.e-11 f&lt; confirm
+1 2 rat&gt;f .s ." F: " f.s 0.5e0 f= confirm
+-1 2 rat&gt;f .s ." F: " f.s -0.5e0 f= confirm
+-1 -2 rat&gt;f .s ." F: " f.s 0.5e0 f= confirm
+1 -2 rat&gt;f .s ." F: " f.s -0.5e0 f= confirm
+1 3 rat&gt;f .s ." F: " f.s 0.333333333333e0 f- fabs 1.e-12 f&lt; confirm
+-1 3 rat&gt;f .s ." F: " f.s -0.333333333333e0 f- fabs 1.e-12 f&lt; confirm
+-1 -3 rat&gt;f .s ." F: " f.s 0.333333333333e0 f- fabs 1.e-12 f&lt; confirm
+1 -3 rat&gt;f .s ." F: " f.s -0.333333333333e0 f- fabs 1.e-12 f&lt; confirm
+2 3 rat&gt;f .s ." F: " f.s 0.666666666666e0 f- fabs 1.e-12 f&lt; confirm
+-2 3 rat&gt;f .s ." F: " f.s -0.666666666666e0 f- fabs 1.e-12 f&lt; confirm
+-2 -3 rat&gt;f .s ." F: " f.s 0.666666666666e0 f- fabs 1.e-12 f&lt; confirm
+2 -3 rat&gt;f .s ." F: " f.s -0.666666666666e0 f- fabs 1.e-12 f&lt; confirm
+3 2 rat&gt;f .s ." F: " f.s 1.5e0 f= confirm
+-3 2 rat&gt;f .s ." F: " f.s -1.5e0 f= confirm
+-3 -2 rat&gt;f .s ." F: " f.s 1.5e0 f= confirm
+3 -2 rat&gt;f .s ." F: " f.s -1.5e0 f= confirm
+3 3 rat&gt;f .s ." F: " f.s 1.e0 f= confirm
+-3 3 rat&gt;f .s ." F: " f.s -1.e0 f= confirm
+-3 -3 rat&gt;f .s ." F: " f.s 1.e0 f= confirm
+3 -3 rat&gt;f .s ." F: " f.s -1.e0 f= confirm
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3222a6c" class="outline-4">
+<h4 id="org3222a6c"><span class="section-number-4">2.3.6.</span> 2rshift</h4>
+<div class="outline-text-4" id="text-2-3-6">
+<p>
+Right-shift 2 single unsigned ints by n bits.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: 2rshift ( n1 n2 u -- n3 n4 ) \ rational "Rational logical right shift"
+    dup -rot ( n1 u n2 u )
+    2swap rshift ( n2 u n3 )
+    -rot rshift ; ( n3 n4 )
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">6 14 1 2rshift .s 3 7 d= confirm
+12 28 2 2rshift .s 3 7 d= confirm
+24 56 3 2rshift .s 3 7 d= confirm
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5472e7e" class="outline-4">
+<h4 id="org5472e7e"><span class="section-number-4">2.3.7.</span> ratTZshift</h4>
+<div class="outline-text-4" id="text-2-3-7">
+<p>
+Right-shift numerator and denominator to eliminate any common trailing
+zeros.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: ratTZshift ( num1 den1 -- num2 den2 ) \ rational "Rational trailing-zero shift"
+    over CTZ ( num1 den1 ntz )
+    over CTZ ( num1 den1 ntz dtz )
+    min ( num1 den1 mintz )
+    2rshift ; ( num2 den2 )
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">6 14 ratTZshift .s 3 7 d= confirm
+12 28 ratTZshift .s 3 7 d= confirm
+24 56 ratTZshift .s 3 7 d= confirm
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org6c05bd6" class="outline-4">
+<h4 id="org6c05bd6"><span class="section-number-4">2.3.8.</span> e8f23&gt;rat</h4>
+<div class="outline-text-4" id="text-2-3-8">
+<p>
+Convert a normal IEEE float 8-bit exponent and (unsigned) 23-bit
+fraction to a rational number.  If out of rational range, return max
+or min.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: ex8f23&gt;rat { ex8 f23 -- num den }
+    \ Convert a normal IEEE float exponent and fraction to rational.
+    \ ex8: 8 bit unsigned 0-255 IEEE float exponent, right justified
+    \ fr23 : 23-bit unsigned float fraction (sans implied 1 in bit 23)
+    \ Does not handle Zero, -Zero, +/- infinity or NaN.
+    \ Returns RatPosMax if exponent too high
+    \ Returns RatPosMin if exponent too low
+    f23 $00800000 or  \ base 24-bit unsigned numerator
+    dup CTZ  \ trailing zeros is 0 to 23
+    $00800000  \ base 24-bit unsigned denominator
+    ex8 127 -  \ 2^exp exponent
+    { n24 tz d24 exp }
+    exp if  \ non-zero exponent
+        exp 0&lt; if  \ is negative ?
+            \ shift denominator left &lt;= 7 and numerator right &lt;= tz
+            exp -7 tz - &gt;= if  \ exp in (-7-tz)..-1 range?
+                exp negate tz &lt;= if \ -exp in 1..tz range?
+                    n24 exp negate rshift d24  \ rshift n24 by -exp
+                else
+                    n24 tz rshift  \ rshift n24 by full tz, if any
+                    d24 exp negate tz - lshift  \ and lshift d24 the rest
+                endif
+            else
+                RatPosMin
+            endif
+        else \ is positive
+            \ shift numerator left &lt;= 7 and denominator right &lt;= 23
+            exp 30 &lt;= if  \ exp in 1..30 range?
+                exp 23 &lt;= if \ exp in 1..23 range?
+                    n24 d24 exp rshift  \ rshift d24 by exp
+                else
+                    n24 exp 23 - lshift  \ lshift n24 by exp-23
+                    d24 23 rshift  \ and rshift d24 by 23
+                endif
+            else
+                RatPosMax
+            endif
+        endif
+    else \ exp is zero. Use base n24 d24
+        n24 d24
+    endif ( num den )
+    ratTZshift ;  \ eliminate any common trailing zeros
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org812355f" class="outline-4">
+<h4 id="org812355f"><span class="section-number-4">2.3.9.</span> f&gt;rat “Float to Rational”</h4>
+<div class="outline-text-4" id="text-2-3-9">
+<p>
+Convert a floating point number to a rational number.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">variable f32ieee  \ Entire 32-bit ieee float buffer
+: f&gt;rat ( f -- num den)
+    \ Convert a floating point number to a rational number.
+    f32ieee sf!  \ store the given float as 32 bits
+    f32ieee @ $007FFFFF and  \ 23-bit fraction part of float, with bit 23 set
+    f32ieee @ $7F800000 and 23 rshift  \ exponent of float, shifted 
+    f32ieee @ $80000000 and  \ negative sign of float
+    { f32frac f32expo f32sign }
+    f32expo $FF = if  \ expo = special 255 ?
+        f32frac if  \ frac &lt;&gt; 0 ?
+            ratNan  \ non-a-number
+        else  \ +/- inf
+            f32sign if  \ negative ?
+                ratNegInf
+            else
+                ratPosInf
+            endif
+        endif
+    else
+        f32expo 0= f32frac 0= and if  \ expo = 0 and frac = 0
+            f32sign if  \ negative ?
+                ratNegZero
+            else
+                ratZero
+            endif
+        else
+            f32expo f32frac ex8f23&gt;rat  \ Convert  exponent and fraction to rational
+            f32sign if  \ is negative?
+                swap negate swap
+            endif  \ negate the numerator
+        endif
+    endif ;
+</pre>
+</div>
+
+<p>
+Works for:
+</p>
+<ul class="org-ul">
+<li class="on"><code>[X]</code> +0</li>
+<li class="on"><code>[X]</code> -0</li>
+<li class="on"><code>[X]</code> +Inf</li>
+<li class="on"><code>[X]</code> -Inf</li>
+<li class="on"><code>[X]</code> NaN</li>
+<li class="on"><code>[X]</code> +1</li>
+<li class="on"><code>[X]</code> -1</li>
+<li class="on"><code>[X]</code> +2147483647</li>
+<li class="on"><code>[X]</code> -2147483648</li>
+<li class="on"><code>[X]</code> +1/2147483647</li>
+<li class="on"><code>[X]</code> -1/2147483647</li>
+</ul>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">.s ." F: " f.s  \ &lt;0&gt; F: &lt;0&gt; =
+0.0e0 f&gt;rat .s RatZero d= confirm
+-0.0e0 f&gt;rat .s RatNegZero d= confirm
+1.0e0 0.0e0  f/ f&gt;rat .s RatPosInf d= confirm
+-1.0e0 0.0e0 f/ f&gt;rat .s RatNegInf d= confirm
+0.0e0 0.0e0  f/ f&gt;rat .s RatNan d= confirm
+1.0e0 f&gt;rat .s RatPosOne d= confirm
+-1.0e0 f&gt;rat .s RatNegOne d= confirm
+2.0e10 f&gt;rat .s RatPosMax d= confirm
+-2.0e10 f&gt;rat .s RatNegMax d= confirm
+2.0e-11 f&gt;rat .s RatPosMin d= confirm
+-2.0e-11 f&gt;rat .s RatNegMin d= confirm
+1.5e0 f&gt;rat .s 3 2 d= confirm
+-1.5e0 f&gt;rat .s -3 2 d= confirm
+1.75e0 f&gt;rat .s 7 4 d= confirm
+-1.75e0 f&gt;rat .s -7 4 d= confirm
+1.1e0 f&gt;rat .s 9227469 8388608 d= confirm
+-1.1e0 f&gt;rat .s -9227469 8388608 d= confirm
+2147483647.0e0 f&gt;rat .s 2147483647 1 d= confirm
+-2147483647.0e0 f&gt;rat .s -2147483647 1 d= confirm
+1.0e0 2147483647.0e0 f/ f&gt;rat .s 1 2147483647 d= confirm
+-1.0e0 2147483647.0e0 f/ f&gt;rat .s -1 2147483647 d= confirm
+2.0e0 f&gt;rat .s 2 1 d= confirm
+4.0e0 f&gt;rat .s 4 1 d= confirm
+8.0e0 f&gt;rat .s 8 1 d= confirm
+16.0e0 f&gt;rat .s 16 1 d= confirm
+32.0e0 f&gt;rat .s 32 1 d= confirm
+64.0e0 f&gt;rat .s 64 1 d= confirm
+128.0e0 f&gt;rat .s 128 1 d= confirm
+256.0e0 f&gt;rat .s 256 1 d= confirm
+512.0e0 f&gt;rat .s 512 1 d= confirm
+1024.0e0 f&gt;rat .s 1024 1 d= confirm
+2048.0e0 f&gt;rat .s 2048 1 d= confirm
+4096.0e0 f&gt;rat .s 4096 1 d= confirm
+8192.0e0 f&gt;rat .s 8192 1 d= confirm
+16384.0e0 f&gt;rat .s 16384 1 d= confirm
+32768.0e0 f&gt;rat .s 32768 1 d= confirm
+65536.0e0 f&gt;rat .s 65536 1 d= confirm
+131072.0e0 f&gt;rat .s 131072 1 d= confirm
+262144.0e0 f&gt;rat .s 262144 1 d= confirm
+524288.0e0 f&gt;rat .s 524288 1 d= confirm
+1048576.0e0 f&gt;rat .s 1048576 1 d= confirm
+2097152.0e0 f&gt;rat .s 2097152 1 d= confirm
+4194304.0e0 f&gt;rat .s 4194304 1 d= confirm
+8388608.0e0 f&gt;rat .s 8388608 1 d= confirm
+16777216.0e0 f&gt;rat .s 16777216 1 d= confirm
+33554432.0e0 f&gt;rat .s 33554432 1 d= confirm
+67108864.0e0 f&gt;rat .s 67108864 1 d= confirm
+134217728.0e0 f&gt;rat .s 134217728 1 d= confirm
+268435456.0e0 f&gt;rat .s 268435456 1 d= confirm
+536870912.0e0 f&gt;rat .s 536870912 1 d= confirm
+1073741824.0e0 f&gt;rat .s 1073741824 1 d= confirm
+2147483648.0e0 f&gt;rat .s RatPosMax d= confirm
+4294967296.0e0 f&gt;rat .s RatPosMax d= confirm
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org8c4021f" class="outline-4">
+<h4 id="org8c4021f"><span class="section-number-4">2.3.10.</span> ratReduce</h4>
+<div class="outline-text-4" id="text-2-3-10">
+<p>
+Reduce the fraction to an equivalent one with the lowest terms by
+dividing both numerator and denominator by their greatest common
+factor, if the GCF is greater than one.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: ratReduce ( num1 den1 -- num2 den2 )
+    \ if both terms are non-zero and the GCF is &gt; 1, reduce to lowest terms.
+    dup if  \ numer &lt;&gt; 0 ?
+        over if  \ denom &lt;&gt; 0 ?
+            2dup GCF  \ find GCF (which is positive)
+            dup 1- if   \ GCF &gt; 1 ? ( -- num1 den1 GCF )
+                dup -rot ( -- num1 GCF den1 GCF )
+                2swap / -rot  \ numer=numer/GCF ( -- num2 den1 GCF )
+                /  \ denom=denom/GCF ( -- num2 den2 )
+            else
+                drop  \ drop GCF of 1
+            endif
+        endif
+    endif ;
+</pre>
+</div>
+
+<p>
+Works for:
+</p>
+<ul class="org-ul">
+<li class="on"><code>[X]</code> +0</li>
+<li class="on"><code>[X]</code> -0</li>
+<li class="on"><code>[X]</code> +Inf</li>
+<li class="on"><code>[X]</code> -Inf</li>
+<li class="on"><code>[X]</code> NaN</li>
+<li class="on"><code>[X]</code> +1</li>
+<li class="on"><code>[X]</code> -1</li>
+<li class="on"><code>[X]</code> +2147483647</li>
+<li class="on"><code>[X]</code> -2147483648</li>
+<li class="on"><code>[X]</code> +1/2147483647</li>
+<li class="on"><code>[X]</code> -1/2147483647</li>
+</ul>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">ratZero ratReduce .s ratZero d= confirm
+ratNegZero ratReduce .s ratNegZero d= confirm
+ratPosInf ratReduce .s ratPosInf d= confirm
+ratNegInf ratReduce .s ratNegInf d= confirm
+ratNaN ratReduce .s ratNaN d= confirm
+ratPosOne ratReduce .s ratPosOne d= confirm
+ratNegOne ratReduce .s ratNegOne d= confirm
+ratPosMax ratReduce .s ratPosMax d= confirm
+ratNegMax ratReduce .s ratNegMax d= confirm
+ratPosMin ratReduce .s ratPosMin d= confirm
+ratNegMin ratReduce .s ratNegMin d= confirm
+123 123 ratReduce .s 1 1 d= confirm
+18 123 ratReduce .s 6 41 d= confirm
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org4550cbf" class="outline-4">
+<h4 id="org4550cbf"><span class="section-number-4">2.3.11.</span> ratNorm</h4>
+<div class="outline-text-4" id="text-2-3-11">
+<div class="org-src-container">
+<pre class="src src-forth">: ratNorm ( num1 den1 -- num2 den2 ) \ rational "Rational Normalize"
+    ratFixSign  \ Ensure non-negative den1)
+    dup if  \ "? 0&lt;&gt;" den non-zero
+        over if  \ "0&lt;&gt; 0&lt;&gt;" normal
+            ratReduce  \ Reduce fraction by factoring GCF
+        else  \ "0= 0&lt;&gt;" some zero
+            dup 0&lt; if  \ "0= 0&lt;" neg zero
+                ratNegZero
+            else  \ "0= 0&gt;" normal zero
+                ratZero
+            endif
+        endif
+    else  \ "? 0=" infinity or NaN
+        over if  \ "0&lt;&gt; 0=" +/- Infinity
+            over 0&lt; if  \ "0&lt; 0=" -Infinity
+                ratNegInf
+            else  \ "0&gt; 0=" +Infinity
+                ratPosInf
+            endif
+        else  \ "0= 0=" NaN
+            ratNaN
+        endif
+    endif ;
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org2eff145" class="outline-4">
+<h4 id="org2eff145"><span class="section-number-4">2.3.12.</span> ratMediant "Compute the Mediant"</h4>
+<div class="outline-text-4" id="text-2-3-12">
+<p>
+Compute the mediant of two ratios. Given a/b and c/d. Find (a+c)/()c+d).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: ratMediant { numA denA numB denB -- num den } \ rational "rat-mediantt"
+    \ Compute the mediant of two ratios
+;
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5f74010" class="outline-4">
+<h4 id="org5f74010"><span class="section-number-4">2.3.13.</span> f&gt;ratApprox "Convert float to an approximate rational."</h4>
+<div class="outline-text-4" id="text-2-3-13">
+<p>
+Binary search for a rational that approximates a float, given a
+maximum denominator. Uses ratMediant, above.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgf7679c1" class="outline-3">
+<h3 id="orgf7679c1"><span class="section-number-3">2.4.</span> Operations</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+This section provides basic math operations and supporting words.
+</p>
+</div>
+
+<div id="outline-container-org9cb0d58" class="outline-4">
+<h4 id="org9cb0d58"><span class="section-number-4">2.4.1.</span> rat* “rat star”</h4>
+<div class="outline-text-4" id="text-2-4-1">
+<p>
+This simply multiplies two rational numbers.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: rat* { numA denA numB denB -- num den } \ Multiply 2 rational numbers
+    numA numB *
+    denA denB * ;
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge9d3c7c" class="outline-4">
+<h4 id="orge9d3c7c"><span class="section-number-4">2.4.2.</span> rat1/ “rat invert”</h4>
+<div class="outline-text-4" id="text-2-4-2">
+<p>
+This inverts a rational number.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">' swap Alias rat1/
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org2d28175" class="outline-4">
+<h4 id="org2d28175"><span class="section-number-4">2.4.3.</span> rat/ “rat slash”</h4>
+<div class="outline-text-4" id="text-2-4-3">
+<p>
+This divides two rational numbers by inverting the second rational
+number and then multiplying them.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: rat/ ( numA denA numB denB -- num den ) \ divide two rational numbers
+    rat1/ rat* ;
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3f1cc1b" class="outline-4">
+<h4 id="org3f1cc1b"><span class="section-number-4">2.4.4.</span> ratComDen “rat Common Denominator”</h4>
+<div class="outline-text-4" id="text-2-4-4">
+<p>
+Convert two rational numbers to use a common denominator. May change both.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: ratComDen { numA denA numB denB -- numC denC numD denD } \ Convert two ratios to use a common denominator
+    denA denB GCF { cf } \ remember the GCF of the denominators
+    numA denB cf */  \ get numC
+    denA denB cf */  \ get denC
+    numB denA cf */  \ get numD
+    over ;  \ get denD
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">0 1 2 3 ratComDen .s 2 3 d= -rot 0 3 d= and confirm
+1 2 3 4 ratComDen .s 3 4 d= -rot 2 4 d= and confirm
+2 3 4 5 ratComDen .s 12 15 d= -rot 10 15 d= and confirm
+3 4 5 6 ratComDen .s 10 12 d= -rot 9 12 d= and confirm
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc0cd714" class="outline-4">
+<h4 id="orgc0cd714"><span class="section-number-4">2.4.5.</span> rat+ “rat plus”</h4>
+<div class="outline-text-4" id="text-2-4-5">
+<p>
+Add two rationals using a common denominator.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: rat+ ( numA denA numB denB -- numC denC ) \ rational "Rat Plus"
+    ratComDen { numC denC numD denD } \ make denominators common
+    numC numD + denC ;  \ Add numerators and use either denominator
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgd2bfe37" class="outline-4">
+<h4 id="orgd2bfe37"><span class="section-number-4">2.4.6.</span> ratNegate “rat negate”</h4>
+<div class="outline-text-4" id="text-2-4-6">
+<p>
+Negate a rational by negating the numerator.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: ratNegate ( num1 den1 -- num2 den2 ) \ negate a rational number
+    swap negate swap ;  \ Negate the numerator and replace it.
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgedb4a06" class="outline-4">
+<h4 id="orgedb4a06"><span class="section-number-4">2.4.7.</span> rat- “rat minus”</h4>
+<div class="outline-text-4" id="text-2-4-7">
+<p>
+Subtract two rationals by negating the second rational and then adding.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: rat- ( numA denA numB denB -- numC den C ) \ subtract ratioA - ratioB
+    ratNegate rat+ ;  \ Subtract by negating ratioB and adding.
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org4757855" class="outline-4">
+<h4 id="org4757855"><span class="section-number-4">2.4.8.</span> rat1+ “rat one plus”</h4>
+<div class="outline-text-4" id="text-2-4-8">
+<p>
+Add one to a rational by adding the denominator to the numerator.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: rat1+ ( num1 den1 -- num2 den2 ) \ add one to a rational
+    ratFixSign \ ensure that the denominator is positive
+    tuck + swap ;  \ Add den1 to num1 and replace it
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgde884dd" class="outline-4">
+<h4 id="orgde884dd"><span class="section-number-4">2.4.9.</span> rat1- “rat 1 minus”</h4>
+<div class="outline-text-4" id="text-2-4-9">
+<p>
+Subtract one from a rational by subtracting the denominator from the numerator.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: rat1- ( num1 den1 -- num2 den2 )  \ subtract 1 from a rational
+    ratFixSign \ ensure that the denominator is positive
+    tuck - swap ;  \ Subtract den1 from num1 and replace it.
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org691867d" class="outline-4">
+<h4 id="org691867d"><span class="section-number-4">2.4.10.</span> ratAbs “rat abs”</h4>
+<div class="outline-text-4" id="text-2-4-10">
+<p>
+Find the absolute value of a rational number by making both numerator
+and denominator positive.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: ratAbs ( num1 den1 -- num2 den2 ) \ absolute value
+    dup 0&lt; if \ denom &lt; 0 ?
+        negate
+    endif
+    swap
+    dup 0&lt; if \ numer &lt; 0 ?
+        negate
+    endif
+    swap ;
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3b92b58" class="outline-3">
+<h3 id="org3b92b58"><span class="section-number-3">2.5.</span> Comparisons</h3>
+<div class="outline-text-3" id="text-2-5">
+<p>
+This section defines words that compare rational numbers or find min / max.
+</p>
+</div>
+
+<div id="outline-container-org0066d4b" class="outline-4">
+<h4 id="org0066d4b"><span class="section-number-4">2.5.1.</span> rat=0 "rat equals 0"</h4>
+<div class="outline-text-4" id="text-2-5-1">
+<p>
+Determine if a rational number is 0. To be zero, the numerator must be zero and
+the denominator must be non-zero. Both Positive and negative 0 are
+equal to zero (and each other).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org01a7524" class="outline-4">
+<h4 id="org01a7524"><span class="section-number-4">2.5.2.</span> rat&lt;0 "rat is less than 0"</h4>
+<div class="outline-text-4" id="text-2-5-2">
+<p>
+Determine if a rational number is less than 0 after fixing sign of denominator.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc64c7be" class="outline-4">
+<h4 id="orgc64c7be"><span class="section-number-4">2.5.3.</span> rat= “rat-equals”</h4>
+<div class="outline-text-4" id="text-2-5-3">
+<p>
+Determine if two rational numbers are equal after normalizing them.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">: rat= ( num1 den1 num2 den2 -- f ) \ rational "rat-equals"
+    \ compare two rational numbers for equality
+    \ normalizes both rational, then tests for equality with d=
+    2swap ratNormal 2swap ratNormal
+    d= ;
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0ff1fea" class="outline-4">
+<h4 id="org0ff1fea"><span class="section-number-4">2.5.4.</span> rat&lt; "rat less than"</h4>
+<div class="outline-text-4" id="text-2-5-4">
+<p>
+Determine if the first rational number is &lt; the second by subtraction
+and comparison to 0.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org6c115ef" class="outline-4">
+<h4 id="org6c115ef"><span class="section-number-4">2.5.5.</span> rat&lt;= "rat less than or equals"</h4>
+<div class="outline-text-4" id="text-2-5-5">
+<p>
+Determine if the first rational number is &lt;= the second by subtraction
+and comparison to 0.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orga84e1d5" class="outline-4">
+<h4 id="orga84e1d5"><span class="section-number-4">2.5.6.</span> rat&gt; "rat greater than"</h4>
+<div class="outline-text-4" id="text-2-5-6">
+<p>
+Determine if the first rational number is &gt; the second by using rat&lt;=
+and NOT.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org2628a1c" class="outline-4">
+<h4 id="org2628a1c"><span class="section-number-4">2.5.7.</span> rat&gt;= "rat greater than or equals"</h4>
+<div class="outline-text-4" id="text-2-5-7">
+<p>
+Determine if the first rational number is &gt;= the second by using rat&lt;
+and NOT.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgbb96e2c" class="outline-4">
+<h4 id="orgbb96e2c"><span class="section-number-4">2.5.8.</span> ratMin “rat min”</h4>
+<div class="outline-text-4" id="text-2-5-8">
+<p>
+Return the minimum of two rational numbers by selecting the result
+from the inputs by using rat&lt;.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgd0f5c36" class="outline-4">
+<h4 id="orgd0f5c36"><span class="section-number-4">2.5.9.</span> ratMax “rat max”</h4>
+<div class="outline-text-4" id="text-2-5-9">
+<p>
+Return the minimum of two rational numbers by selecting the result
+from the inputs by using rat&gt;.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+
+<p>
+Tests:  
+</p>
+<div class="org-src-container">
+<pre class="src src-forth">
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Daniel Birket</p>
+<p class="date">Created: 2024-07-05 Fri 16:41</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

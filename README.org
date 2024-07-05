@@ -38,8 +38,9 @@ integer range (-2,147,483 to 2.147,483). When the denominator is at
 its maximum, precision is very high and the range is reduced to -1
 to 1.
 
-I realize that the limited range may be a concern for some applications, but
-no more than the numerical limitations of other types. I have good
-intentions of creating a double-precision rational number library, but
-as this is my first significant project in Forth, I will attempt the easier
-single-precision case for now.
+I realize that the limited range may be a concern for some
+applications.  I intend to address the range issue by creating a
+3-word "mixed rational" type that includes a single-precision integer
+and a single-precision rational. This will expand the range to the
+entire single-precision integer range while retaining full rational
+precision.
